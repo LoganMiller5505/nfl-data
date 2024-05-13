@@ -2,7 +2,7 @@
 import nfl_data_py as nfl #Main library used for accessing NFL data
 import matplotlib.pyplot as plt #Used for more dynamic visualization
 import pandas as pd #Main library used for storing, manipulating, and processing data
-pd.set_option('display.max_columns', None) #Allow more pandas dataframes to be shown during prints
+pd.set_option('display.max_columns', None) #Allow more pa ndas dataframes to be shown during prints
 from tqdm import tqdm #Used to display a progress bar during length dataframe operations
 tqdm.pandas() #Necessary function for using with pandas
 
@@ -54,125 +54,111 @@ print("Opposing Team Lookup Complete! Sample output:\n") #Print status update
 # Create QB DF
 print("QB Data Importing . . .\n") #Print status update
 qb = weekly[weekly["position"].isin(["QB"])].reset_index(drop=True) #Create new dataframe for relevant QB information
-qb["label"] = qb.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"], axis=1)
+qb["label"] = qb.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
 qb = qb.loc[:, ["label",
-                "player_id",
-                "week",
-                "season",
-                "opponent_team",
-                 "completions",
-                 "attempts",
-                 "passing_yards",
-                 "passing_tds",
-                 "interceptions",
-                 "sacks",
-                 "sack_fumbles",
-                 "passing_air_yards",
-                 "passing_yards_after_catch",
-                 "passing_first_downs",
-                 "passing_epa",
-                 "passing_2pt_conversions",
-                 "pacr",
-                 "dakota",
-                 "carries",
-                 "rushing_yards",
-                 "rushing_tds",
-                 "rushing_fumbles",
-                 "rushing_first_downs",
-                 "rushing_epa",
-                 "rushing_2pt_conversions",
-                 "fantasy_points"]]
+                "completions",
+                "attempts",
+                "passing_yards",
+                "passing_tds",
+                "interceptions",
+                "sacks",
+                "sack_fumbles",
+                "passing_air_yards",
+                "passing_yards_after_catch",
+                "passing_first_downs",
+                "passing_epa",
+                "passing_2pt_conversions",
+                "pacr",
+                "dakota",
+                "carries",
+                "rushing_yards",
+                "rushing_tds",
+                "rushing_fumbles",
+                "rushing_first_downs",
+                "rushing_epa",
+                "rushing_2pt_conversions",
+                "fantasy_points"]]
 print("\nQB Data Imported!\n") #Print status update
 qb.to_csv("data\qb.csv", index=False) #Save QB data to CSV
 
 # Create RB DF
 print("RB Data Importing . . .\n") #Print status update
 rb = weekly[weekly["position"].isin(["RB"])].reset_index(drop=True) #Create new dataframe for relevant RB information
-rb["label"] = rb.progress_apply(lambda row: row["player_id"] + ":" + str(row["week"]) + ":" + str(row["season"]) + ":" + row["recent_team"], axis=1)
+rb["label"] = rb.progress_apply(lambda row: row["player_id"] + ":" + str(row["week"]) + ":" + str(row["season"]) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
 rb = rb.loc[:, ["label",
-                "player_id",
-                 "season",
-                 "week",
-                 "carries",
-                 "rushing_yards",
-                 "rushing_tds",
-                 "rushing_fumbles",
-                 "rushing_first_downs",
-                 "rushing_epa",
-                 "rushing_2pt_conversions",
-                 "receptions",
-                 "targets",
-                 "receiving_yards",
-                 "receiving_tds",
-                 "receiving_fumbles",
-                 "receiving_air_yards",
-                 "receiving_yards_after_catch",
-                 "receiving_first_downs",
-                 "receiving_epa",
-                 "receiving_2pt_conversions",
-                 "racr",
-                 "target_share",
-                 "air_yards_share",
-                 "wopr",
-                 "special_teams_tds", 
-                 "fantasy_points",
-                 "fantasy_points_ppr"]]
+                "carries",
+                "rushing_yards",
+                "rushing_tds",
+                "rushing_fumbles",
+                "rushing_first_downs",
+                "rushing_epa",
+                "rushing_2pt_conversions",
+                "receptions",
+                "targets",
+                "receiving_yards",
+                "receiving_tds",
+                "receiving_fumbles",
+                "receiving_air_yards",
+                "receiving_yards_after_catch",
+                "receiving_first_downs",
+                "receiving_epa",
+                "receiving_2pt_conversions",
+                "racr",
+                "target_share",
+                "air_yards_share",
+                "wopr",
+                "special_teams_tds",
+                "fantasy_points_ppr"]]
 print("\nRB Data Imported!\n") #Print status update
 rb.to_csv("data\\rb.csv", index=False) #Save RB data to CSV
 
 # Create WR DF
 print("WR Data Importing . . .\n") #Print status update
 wr = weekly[weekly["position"].isin(["WR"])].reset_index(drop=True) #Create new dataframe for relevant WR information
-wr["label"] = wr.progress_apply(lambda row: row["player_id"] + ":" + str(row["week"]) + ":" + str(row["season"]) + ":" + row["recent_team"], axis=1)
+wr["label"] = wr.progress_apply(lambda row: row["player_id"] + ":" + str(row["week"]) + ":" + str(row["season"]) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
 wr = wr.loc[:, ["label",
-                 "season",
-                 "week",
-                 "player_id",
-                 "receptions",
-                 "targets",
-                 "receiving_yards",
-                 "receiving_tds",
-                 "receiving_fumbles",
-                 "receiving_air_yards",
-                 "receiving_yards_after_catch",
-                 "receiving_first_downs",
-                 "receiving_epa",
-                 "receiving_2pt_conversions",
-                 "racr",
-                 "target_share",
-                 "air_yards_share",
-                 "wopr",
-                 "special_teams_tds", 
-                 "fantasy_points",
-                 "fantasy_points_ppr"]]
+                "receptions",
+                "targets",
+                "receiving_yards",
+                "receiving_tds",
+                "receiving_fumbles",
+                "receiving_air_yards",
+                "receiving_yards_after_catch",
+                "receiving_first_downs",
+                "receiving_epa",
+                "receiving_2pt_conversions",
+                "racr",
+                "target_share",
+                "air_yards_share",
+                "wopr",
+                "special_teams_tds", 
+                "fantasy_points",
+                "fantasy_points_ppr"]]
 print("\nWR Data Imported!\n") #Print status update
 wr.to_csv("data\wr.csv", index=False) #Save WR data to CSV
 
 # Create TE DF
 print("TE Data Importing . . .\n") #Print status update
 te = weekly[weekly["position"].isin(["TE"])].reset_index(drop=True) #Create new dataframe for relevant TE information
-te["label"] = te.progress_apply(lambda row: row["player_id"] + ":" + str(row["week"]) + ":" + str(row["season"]) + ":" + row["recent_team"], axis=1)
-te = te.loc[:, ["label", 
-                 "season",
-                 "week",
-                 "player_id",
-                 "receptions",
-                 "targets",
-                 "receiving_yards",
-                 "receiving_tds",
-                 "receiving_fumbles",
-                 "receiving_air_yards",
-                 "receiving_yards_after_catch",
-                 "receiving_first_downs",
-                 "receiving_epa",
-                 "receiving_2pt_conversions",
-                 "racr",
-                 "target_share",
-                 "air_yards_share",
-                 "wopr",
-                 "special_teams_tds", 
-                 "fantasy_points",
-                 "fantasy_points_ppr"]]
+te["label"] = te.progress_apply(lambda row: row["player_id"] + ":" + str(row["week"]) + ":" + str(row["season"]) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
+te = te.loc[:, ["label",
+                "receptions",
+                "targets",
+                "receiving_yards",
+                "receiving_tds",
+                "receiving_fumbles",
+                "receiving_air_yards",
+                "receiving_yards_after_catch",
+                "receiving_first_downs",
+                "receiving_epa",
+                "receiving_2pt_conversions",
+                "racr",
+                "target_share",
+                "air_yards_share",
+                "wopr",
+                "special_teams_tds", 
+                "fantasy_points",
+                "fantasy_points_ppr"]]
 print("\nTE Data Imported!\n") #Print status update
 te.to_csv("data\\te.csv", index=False) #Save TE data to CSV'''
 
@@ -204,6 +190,7 @@ k_pbp = k_pbp.loc[:, ["kicker_player_id",
                     "week",
                     "season",
                     "posteam",
+                    "defteam",
                     "play_type",
                     "kick_distance",
                     "field_goal_result",
@@ -234,6 +221,8 @@ for x in unique_kickers:
                 #print(curr_kick)
 
                 possession_team = curr_kick["posteam"].at[0]
+
+                defending_team = curr_kick["defteam"].at[0]
                 
                 fgs = curr_kick[curr_kick["play_type"].isin(["field_goal"])].reset_index(drop=True)
                 eps = curr_kick[curr_kick["play_type"].isin(["extra_point"])].reset_index(drop=True)
@@ -264,9 +253,9 @@ for x in unique_kickers:
     
                 fantasy_points = fgs["fantasy_points"].sum() + eps["fantasy_points"].sum()
 
-                new_id = f"{x}:{str(week)}:{str(season)}:" + str(possession_team)
+                new_id = f"{x}:{str(week)}:{str(season)}:{str(possession_team)}:{str(defending_team)}"
 
-                kick_dict[new_id] = [new_id,len(fgs),len(eps),avg_fg_dist,fg_pctg,ep_pctg,fantasy_points,x]
+                kick_dict[new_id] = [new_id,len(fgs),len(eps),avg_fg_dist,fg_pctg,ep_pctg,fantasy_points]
                 
     
             week-=1 #Repeat inner loop with data from a week ago  
@@ -279,12 +268,7 @@ k = k.rename(columns={0:"label",1:"num_fgs",2:"num_eps",3:"avg_fg_dist",4:"fg_pc
 print("\nK Data Imported!\n") #Print status update
 k.to_csv("data\k.csv", index=False) #Save K data to CSV
 
-# Create D DF
-#Inputs team name
-#Outputs performance history across team history in list format, where [0] is their most recent game and [len-1] is their first recorded game
-# TODO: DEFENSE INFO CURRENTLY BROKEN :( NEED TO FIX WITH A LIKELY COMPLETE REDO
-
-'''def get_defensive_performance_history(team):
+def get_defensive_performance_history(team):
     
     season = last_year-1 #Upper bound for season year
     week=18 #Upper bound for week in season
@@ -334,48 +318,49 @@ k.to_csv("data\k.csv", index=False) #Save K data to CSV
         
     return return_df #Array with appended data from all defensive activities
 
-#Empty dictionary for each team abbreviation
-team_defenses = {
-    "NE" : None,
-    "NO" : None,
-    "NYJ": None,
-    "LAC": None,
-    "ATL": None,
-    "NYG": None,
-    "ARI": None,
-    "PIT": None,
-    "WAS": None,
-    "GB" : None,
-    "MIA": None,
-    "PHI": None,
-    "BUF": None,
-    "DET": None,
-    "TB" : None,
-    "SEA": None,
-    "TEN": None,
-    "BAL": None,
-    "LV" : None,
-    "SF" : None,
-    "CAR": None,
-    "KC" : None,
-    "JAX": None,
-    "CHI": None,
-    "LA" : None,
-    "DEN": None,
-    "HOU": None,
-    "CIN": None,
-    "MIN": None,
-    "CLE": None,
-    "IND": None,
-    "DAL": None
-}
+#Empty array for each team abbreviation
+team_defenses = [
+    "NE",
+    "NO",
+    "NYJ",
+    "LAC",
+    "ATL",
+    "NYG",
+    "ARI",
+    "PIT",
+    "WAS",
+    "GB",
+    "MIA",
+    "PHI",
+    "BUF",
+    "DET",
+    "TB",
+    "SEA",
+    "TEN",
+    "BAL",
+    "LV",
+    "SF",
+    "CAR",
+    "KC",
+    "JAX",
+    "CHI",
+    "LA",
+    "DEN",
+    "HOU",
+    "CIN",
+    "MIN",
+    "CLE",
+    "IND",
+    "DAL"
+]
+
+return_df = pd.DataFrame(columns=["season","week","defending_team","offensive_team","interceptions","sacks","sack_yards","sack_fumbles","sack_fumbles_recovered","receiving_fumbles","receiving_fumbles_recovered","rushing_yards_allowed","passing_yards_allowed","passing_tds_allowed","rushing_tds_allowed","special_teams_tds_allowed"])
 
 #Populate dictionary with cooresponding team's history of defensive performances
 for x in team_defenses:
-    team_defenses[x] = get_defensive_performance_history(x)
-
-#Create dataframe from dictionary
-d = pd.DataFrame.from_dict(team_defenses,orient="index")
-d = d.rename(columns={0:"season",1:"week",2:"defending_team",3:"offensive_team",4:"interceptions",5:"sacks",6:"sack_yards",7:"sack_fumbles",8:"sack_fumbles_recovered",9:"receiving_fumbles",10:"receiving_fumbles_recovered",11:"rushing_yards_allowed",12:"passing_yards_allowed",13:"passing_tds_allowed",14:"rushing_tds_allowed",15:"special_teams_tds_allowed"})
+    #Create dataframe from dictionary
+    d = get_defensive_performance_history(x)
+    return_df = pd.concat([return_df,d])
+    
 print("\nD Data Imported!\n") #Print status update
-d.to_csv("data\d.csv", index=False) #Save D data to CSV'''
+return_df.to_csv(f"data\d.csv", index=False) #Save D data to CSV
