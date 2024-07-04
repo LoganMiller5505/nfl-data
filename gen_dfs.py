@@ -84,7 +84,7 @@ qb.to_csv("data\qb.csv", index=False) #Save QB data to CSV
 # Create RB DF
 print("RB Data Importing . . .\n") #Print status update
 rb = weekly[weekly["position"].isin(["RB"])].reset_index(drop=True) #Create new dataframe for relevant RB information
-rb["label"] = rb.progress_apply(lambda row: row["player_id"] + ":" + str(row["week"]) + ":" + str(row["season"]) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
+rb["label"] = rb.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
 rb = rb.loc[:, ["label",
                 "carries",
                 "rushing_yards",
@@ -115,7 +115,7 @@ rb.to_csv("data\\rb.csv", index=False) #Save RB data to CSV
 # Create WR DF
 print("WR Data Importing . . .\n") #Print status update
 wr = weekly[weekly["position"].isin(["WR"])].reset_index(drop=True) #Create new dataframe for relevant WR information
-wr["label"] = wr.progress_apply(lambda row: row["player_id"] + ":" + str(row["week"]) + ":" + str(row["season"]) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
+wr["label"] = wr.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
 wr = wr.loc[:, ["label",
                 "receptions",
                 "targets",
@@ -140,7 +140,7 @@ wr.to_csv("data\wr.csv", index=False) #Save WR data to CSV
 # Create TE DF
 print("TE Data Importing . . .\n") #Print status update
 te = weekly[weekly["position"].isin(["TE"])].reset_index(drop=True) #Create new dataframe for relevant TE information
-te["label"] = te.progress_apply(lambda row: row["player_id"] + ":" + str(row["week"]) + ":" + str(row["season"]) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
+te["label"] = te.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
 te = te.loc[:, ["label",
                 "receptions",
                 "targets",

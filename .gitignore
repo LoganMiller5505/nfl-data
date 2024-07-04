@@ -1,2 +1,4 @@
 .ipynb_checkpoints
 data/
+nn_data/
+models/
