@@ -3,6 +3,7 @@ import pandas as pd
 game_coverage = 5
 
 te = pd.read_csv('data/te.csv')
+te = te[~te['label'].str.contains('2023')]
 te.sort_values(by=['label'], inplace=True)
 te.reset_index(drop=True, inplace=True)
 
@@ -147,4 +148,4 @@ print(te_nn.head())
 
 te_nn.dropna(inplace=True)
 
-te_nn.to_csv('nn_data/te_nn.csv', index=False)
+te_nn.to_csv('limited_nn_data/te_nn.csv', index=False)

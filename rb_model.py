@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 
 print("Loading Data")
 
-qb_nn = pd.read_csv("limited_nn_data/qb_nn.csv")
+rb_nn = pd.read_csv("limited_nn_data/rb_nn.csv")
 
-target = qb_nn["fantasy_points"]
+target = rb_nn["fantasy_points_ppr"]
 target = target.fillna(0)
 target = target.astype('float')
 target
 
-features = qb_nn.drop(columns=["fantasy_points"])
+features = rb_nn.drop(columns=["fantasy_points_ppr"])
 features = features.fillna(0)
 features = features.astype('float')
 features
@@ -39,13 +39,13 @@ history = model.fit(features, target, epochs=EPOCHS, batch_size=BATCH_SIZE, vali
 loss, mae = model.evaluate(features, target)
 print(f'Mean Absolute Error: {mae}')
 
-model.save("limited_models/qb_nn.h5")
+model.save("limited_models/rb_nn.h5")
 
 plt.plot(history.history['loss'], label='MAE (training data)')
 plt.plot(history.history['val_loss'], label='MAE (validation data)')
-plt.title('MAE for QB NN Model')
+plt.title('MAE for RB NN Model')
 plt.ylabel('MAE value')
 plt.xlabel('No. epoch')
 plt.legend(loc="upper left")
 plt.show()
-plt.savefig("limited_models/qb_nn.png")
+plt.savefig("limited_models/rb_nn.png")

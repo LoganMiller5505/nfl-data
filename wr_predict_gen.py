@@ -3,6 +3,7 @@ import pandas as pd
 game_coverage = 5
 
 wr = pd.read_csv('data/wr.csv')
+wr = wr[~wr['label'].str.contains('2023')]
 wr.sort_values(by=['label'], inplace=True)
 wr.reset_index(drop=True, inplace=True)
 
@@ -147,4 +148,4 @@ print(wr_nn.head())
 
 wr_nn.dropna(inplace=True)
 
-wr_nn.to_csv('nn_data/wr_nn.csv', index=False)
+wr_nn.to_csv('limited_nn_data/wr_nn.csv', index=False)

@@ -2,3 +2,5 @@
 data/
 nn_data/
 models/
+limited_nn_data/
+limited_models/

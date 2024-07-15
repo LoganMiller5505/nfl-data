@@ -3,6 +3,7 @@ import pandas as pd
 game_coverage = 5
 
 qb = pd.read_csv('data/qb.csv')
+qb = qb[~qb['label'].str.contains('2023')]
 qb.sort_values(by=['label'], inplace=True)
 qb.reset_index(drop=True, inplace=True)
 
@@ -156,7 +157,7 @@ print(qb_nn.head())
 
 qb_nn.dropna(inplace=True)
 
-qb_nn.to_csv('nn_data/qb_nn.csv', index=False)
+qb_nn.to_csv('limited_nn_data/qb_nn.csv', index=False)
 
 '''
 qb_nn.at[i,f"{x}_opp_interceptions"] = d_data["interceptions"]
