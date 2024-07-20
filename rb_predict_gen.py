@@ -1,9 +1,8 @@
 import pandas as pd
 
-game_coverage = 5
+game_coverage = 10
 
 rb = pd.read_csv('data/rb.csv')
-rb = rb[~rb['label'].str.contains('2023')]
 rb.sort_values(by=['label'], inplace=True)
 rb.reset_index(drop=True, inplace=True)
 
@@ -57,6 +56,8 @@ for x in range(1,game_coverage+1):
     rb_nn = pd.concat([rb_nn, new_columns])
 
 rb_nn.insert(0, 'fantasy_points_ppr', 0)
+rb_nn.insert(0, '2023', False)
+rb_nn.insert(0, 'id', "")
 
 rb_nn = rb_nn.reindex(rb.index)
 
@@ -79,6 +80,9 @@ for i in range(0,len(rb_nn)):
     d_data = d_history.loc[(d_history['season'] == int(season)) & (d_history['week'] == int(week))]
     #print(d_data)
     d_data_idx = d_data.index[0]
+
+    rb_nn.at[i, "2023"] = season == "2023"
+    rb_nn.at[i, "id"] = player_id
     
 
     player_history = rb.loc[(player_id == rb['label'].str[:10])].reset_index(drop=True)
@@ -157,8 +161,9 @@ for i in range(0,len(rb_nn)):
     
     rb_nn.at[i,"fantasy_points_ppr"] = data["fantasy_points_ppr"]
 
+
+rb_nn.fillna(0, inplace=True)
+
 print(rb_nn.head())
 
-rb_nn.dropna(inplace=True)
-
-rb_nn.to_csv('limited_nn_data/rb_nn.csv', index=False)
+rb_nn.to_csv('nn_data/rb_nn.csv', index=False)

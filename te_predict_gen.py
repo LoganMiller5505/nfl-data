@@ -1,9 +1,8 @@
 import pandas as pd
 
-game_coverage = 5
+game_coverage = 10
 
 te = pd.read_csv('data/te.csv')
-te = te[~te['label'].str.contains('2023')]
 te.sort_values(by=['label'], inplace=True)
 te.reset_index(drop=True, inplace=True)
 
@@ -51,6 +50,8 @@ for x in range(1,game_coverage+1):
     te_nn = pd.concat([te_nn, new_columns])
 
 te_nn.insert(0, 'fantasy_points_ppr', 0)
+te_nn.insert(0, '2023', False)
+te_nn.insert(0, 'id', "")
 
 te_nn = te_nn.reindex(te.index)
 
@@ -74,6 +75,8 @@ for i in range(0,len(te_nn)):
     #print(d_data)
     d_data_idx = d_data.index[0]
     
+    te_nn.at[i, "2023"] = season == "2023"
+    te_nn.at[i, "id"] = player_id
 
     player_history = te.loc[(player_id == te['label'].str[:10])].reset_index(drop=True)
 
@@ -144,8 +147,8 @@ for i in range(0,len(te_nn)):
     
     te_nn.at[i,"fantasy_points_ppr"] = data["fantasy_points_ppr"]
 
+te_nn.fillna(0, inplace=True)
+
 print(te_nn.head())
 
-te_nn.dropna(inplace=True)
-
-te_nn.to_csv('limited_nn_data/te_nn.csv', index=False)
+te_nn.to_csv('nn_data/te_nn.csv', index=False)

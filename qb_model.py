@@ -3,38 +3,58 @@ import matplotlib.pyplot as plt
 
 print("Loading Data")
 
-qb_nn = pd.read_csv("limited_nn_data/qb_nn.csv")
+qb_nn = pd.read_csv("nn_data/qb_nn.csv")
+qb_nn = qb_nn[qb_nn["2023"] == 0]
+print(qb_nn.head())
 
 target = qb_nn["fantasy_points"]
 target = target.fillna(0)
 target = target.astype('float')
-target
+print(target.head())
 
-features = qb_nn.drop(columns=["fantasy_points"])
+features = qb_nn.drop(columns=["fantasy_points","2023","id"])
 features = features.fillna(0)
 features = features.astype('float')
-features
+print(features.head())
 
 print("Loading Tensorflow")
 
 import tensorflow as tf
 from tensorflow.keras import layers
 
+print("Version: " + tf.__version__)
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+
 EPOCHS = 1000
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 
+model = tf.keras.Sequential()
 
-model = tf.keras.Sequential([
-    layers.Dense(512, activation='relu', input_shape=(features.shape[1],)),
-    layers.Dense(512, activation='relu', input_shape=(features.shape[1],)),
-    layers.Dense(512, activation='relu', input_shape=(features.shape[1],)),
-    layers.Dense(512, activation='relu', input_shape=(features.shape[1],)),
-    layers.Dense(32, activation='relu'),
-    layers.Dense(1)
-])
+model.add(layers.Dense(1024, activation='relu', input_shape=[len(features.keys())]))
+model.add(layers.BatchNormalization())
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(1024, activation='relu'))
+model.add(layers.BatchNormalization())
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(1024, activation='relu'))
+model.add(layers.BatchNormalization())
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(1024, activation='relu'))
+model.add(layers.BatchNormalization())
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(1024, activation='relu'))
+model.add(layers.BatchNormalization())
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(1024, activation='relu'))
+model.add(layers.BatchNormalization())
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(1024, activation='relu'))
+model.add(layers.BatchNormalization())
+model.add(layers.Dropout(0.5))
+model.add(layers.Dense(1))
 
 model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
-history = model.fit(features, target, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split=0.35)
+history = model.fit(features, target, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split=0.2)
 
 loss, mae = model.evaluate(features, target)
 print(f'Mean Absolute Error: {mae}')

@@ -1,9 +1,8 @@
 import pandas as pd
 
-game_coverage = 5
+game_coverage = 10
 
 qb = pd.read_csv('data/qb.csv')
-qb = qb[~qb['label'].str.contains('2023')]
 qb.sort_values(by=['label'], inplace=True)
 qb.reset_index(drop=True, inplace=True)
 
@@ -54,6 +53,8 @@ for x in range(1,game_coverage+1):
     qb_nn = pd.concat([qb_nn, new_columns])
 
 qb_nn.insert(0, 'fantasy_points', 0)
+qb_nn.insert(0, '2023', False)
+qb_nn.insert(0, 'id', "")
 
 qb_nn = qb_nn.reindex(qb.index)
 
@@ -77,6 +78,8 @@ for i in range(0,len(qb_nn)):
     #print(d_data)
     d_data_idx = d_data.index[0]
     
+    qb_nn.at[i, "2023"] = season == "2023"
+    qb_nn.at[i, "id"] = player_id
 
     player_history = qb.loc[(player_id == qb['label'].str[:10])].reset_index(drop=True)
 
@@ -118,7 +121,6 @@ for i in range(0,len(qb_nn)):
             
             d_count+=1
 
-
         while(count!=game_coverage):
             qb_nn.at[i,f"{count+1}_completions"] = player_history.iloc[loop_idx]["completions"]
             qb_nn.at[i,f"{count+1}_attempts"] = player_history.iloc[loop_idx]["attempts"]
@@ -153,11 +155,12 @@ for i in range(0,len(qb_nn)):
     
     qb_nn.at[i,"fantasy_points"] = data["fantasy_points"]
 
+
+qb_nn.fillna(0, inplace=True)
+
 print(qb_nn.head())
 
-qb_nn.dropna(inplace=True)
-
-qb_nn.to_csv('limited_nn_data/qb_nn.csv', index=False)
+qb_nn.to_csv('nn_data/qb_nn.csv', index=False)
 
 '''
 qb_nn.at[i,f"{x}_opp_interceptions"] = d_data["interceptions"]
