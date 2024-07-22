@@ -7,8 +7,51 @@ from tqdm import tqdm #Used to display a progress bar during length dataframe op
 tqdm.pandas() #Necessary function for using with pandas
 
 # Set range for years to save CVs of (where first_year is inclusive, and last_year is exclusive)
-first_year = 2004
+first_year = 2018
 last_year = 2024
+
+# Import raw NGS data
+rec_ngs = nfl.import_ngs_data("receiving", range(first_year,last_year))
+pass_ngs = nfl.import_ngs_data("passing", range(first_year,last_year))
+rush_ngs = nfl.import_ngs_data("rushing", range(first_year,last_year))
+print(rec_ngs.head())
+print(pass_ngs.head())
+print(rush_ngs.head())
+rec_ngs.to_csv("misc\\rec_ngs.csv", index=False)
+pass_ngs.to_csv("misc\\pass_ngs.csv", index=False)
+rush_ngs.to_csv("misc\\rush_ngs.csv", index=False)
+
+# Import raw snap count data
+snaps = nfl.import_snap_counts(range(first_year,last_year))
+print(snaps.head())
+snaps.to_csv("misc\\snaps.csv", index=False)
+
+# Import raw win total data
+wins = nfl.import_win_totals(range(first_year,last_year))
+print(wins.head())
+wins.to_csv("misc\\wins.csv", index=False)
+
+# Import raw QBR data
+qbr = nfl.import_qbr(range(first_year,last_year))
+print(qbr.head())
+qbr.to_csv("misc\\qbr.csv", index=False)
+
+# Import raw Score Line data
+score_line = nfl.import_sc_lines(range(2018,last_year))
+print(score_line.head())
+score_line.to_csv("misc\score_line.csv", index=False)
+
+# Import raw PFR data
+pass_pfr = nfl.import_weekly_pfr("pass", range(2018,last_year))
+rush_pfr = nfl.import_weekly_pfr("rush", range(2018,last_year))
+rec_pfr = nfl.import_weekly_pfr("rec", range(2018,last_year))
+print(pass_pfr.head())
+print(rush_pfr.head())
+print(rec_pfr.head())
+pass_pfr.to_csv("misc\pass_pfr.csv", index=False)
+rush_pfr.to_csv("misc\\rush_pfr.csv", index=False)
+rec_pfr.to_csv("misc\\rec_pfr.csv", index=False)
+print("\nPFR Data Imported!\n")
 
 # Import raw PBP data
 print("\nPBP Data Importing . . .\n") #Print status update
