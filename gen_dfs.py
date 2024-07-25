@@ -20,6 +20,10 @@ print(rush_ngs.head())
 rec_ngs.to_csv("misc\\rec_ngs.csv", index=False)
 pass_ngs.to_csv("misc\\pass_ngs.csv", index=False)
 rush_ngs.to_csv("misc\\rush_ngs.csv", index=False)
+# Add +1 to week for NGS data
+rec_ngs["week"] = rec_ngs["week"] + 1
+pass_ngs["week"] = pass_ngs["week"] + 1
+rush_ngs["week"] = rush_ngs["week"] + 1
 
 # Import raw snap count data
 snaps = nfl.import_snap_counts(range(first_year,last_year))
@@ -65,11 +69,12 @@ print("\nPBP Data Imported!\n") #Print status update
 print("Weekly Data Importing . . .\n") #Print status update
 weekly = nfl.import_weekly_data(range(first_year,last_year)) #Built in function collecting raw weekly data within year range
 weekly = weekly[weekly["season_type"].isin(["REG"])].reset_index(drop=True) #Only take data from regular season (no post season)
-weekly[0:5] #Print sample of result
+print(weekly[0:5]) #Print sample of result
+print(weekly.columns) #Print column names
 print("\nWeekly Data Imported!\n") #Print status update
 
 # Function to lookup opposing team given weekly data
-def date_and_team_to_other_team_vectorized(row, pbp):
+def populate_with_opposing_team(row, pbp):
     # Subset pbp DataFrame based on 'season' and 'week'
     curr_game = pbp[(pbp['year'] == row['season']) & (pbp['week'] == row['week'])]
 
@@ -86,13 +91,121 @@ def date_and_team_to_other_team_vectorized(row, pbp):
     # Return an empty string if no match is found (bye week)
     return ''
 
+def populate_with_snap_counts(row, snaps):
+    snap_count = snaps[(snaps['season'] == row['season']) & (snaps['week'] == row['week']) & (snaps['player'] == row['player_display_name'])]
+    return snap_count['offense_snaps'].sum()
+
+def populate_with_ngs(row, pass_ngs, rush_ngs, rec_ngs):
+    # Subset ngs DataFrames based on 'season' and 'week'
+    if row['position'] == 'QB':
+        curr_game = pass_ngs[(pass_ngs['season'] == row['season']) & ((pass_ngs['week']) == row['week']) & (pass_ngs['player_display_name'] == row['player_display_name'])]
+        if curr_game.empty:
+            print("Empty")
+            return None
+        return curr_game.loc[:,["avg_time_to_throw",
+                                  "avg_completed_air_yards",
+                                  "avg_intended_air_yards",
+                                  "avg_air_yards_differential",
+                                  "aggressiveness",
+                                  "max_completed_air_distance",
+                                  "avg_air_yards_to_sticks",
+                                  "passer_rating",
+                                  "completion_percentage",
+                                  "expected_completion_percentage",
+                                  "completion_percentage_above_expectation",
+                                  "avg_air_distance",
+                                  "max_air_distance"]].reset_index(drop=True).iloc[0]
+    elif row['position'] == 'RB':
+        curr_game = rush_ngs[(rush_ngs['season'] == row['season']) & ((rush_ngs['week']) == row['week']) & (rush_ngs['player_display_name'] == row['player_display_name'])]
+        if curr_game.empty:
+            print("Empty")
+            return None
+        return curr_game.loc[:, ["efficiency",
+                                 "percent_attempts_gte_eight_defenders",
+                                 "avg_time_to_los",
+                                 "rush_attempts",
+                                 "rush_yards",
+                                 "expected_rush_yards",
+                                 "rush_yards_over_expected",
+                                 "avg_rush_yards",
+                                 "rush_yards_over_expected_per_att",
+                                 "rush_pct_over_expected"]].reset_index(drop=True).iloc[0]
+    elif row['position'] == 'WR' or row['position'] == 'TE':
+        curr_game = rec_ngs[(rec_ngs['season'] == row['season']) & ((rec_ngs['week']) == row['week']) & (rec_ngs['player_display_name'] == row['player_display_name'])]
+        if curr_game.empty:
+            print("Empty")
+            return None
+        return curr_game.loc[:, ["avg_cushion",
+                                 "avg_separation",
+                                 "avg_intended_air_yards",
+                                 "percent_share_of_intended_air_yards",
+                                 "catch_percentage",
+                                 "avg_yac",
+                                 "avg_expected_yac",
+                                 "avg_yac_above_expectation"]].reset_index(drop=True).iloc[0]
+    else:
+        print(f"Invalid position")
+        return None
+
+weekly["opponent_team"] = "null"
+weekly["snap_count"] = -1
+
+weekly["avg_time_to_throw"] = -1
+weekly["avg_completed_air_yards"] = -1
+weekly["avg_intended_air_yards"] = -1
+weekly["avg_air_yards_differential"] = -1
+weekly["aggressiveness"] = -1
+weekly["max_completed_air_distance"] = -1
+weekly["avg_air_yards_to_sticks"] = -1
+weekly["passer_rating"] = -1
+weekly["completion_percentage"] = -1
+weekly["expected_completion_percentage"] = -1
+weekly["completion_percentage_above_expectation"] = -1
+weekly["avg_air_distance"] = -1
+weekly["max_air_distance"] = -1
+
+weekly["efficiency"] = -1
+weekly["percent_attempts_gte_eight_defenders"] = -1
+weekly["avg_time_to_los"] = -1
+weekly["rush_attempts"] = -1
+weekly["rush_yards"] = -1
+weekly["expected_rush_yards"] = -1
+weekly["rush_yards_over_expected"] = -1
+weekly["avg_rush_yards"] = -1
+weekly["rush_yards_over_expected_per_att"] = -1
+weekly["rush_pct_over_expected"] = -1
+
+weekly["avg_cushion"] = -1
+weekly["avg_separation"] = -1
+weekly["avg_intended_air_yards"] = -1
+weekly["percent_share_of_intended_air_yards"] = -1
+weekly["catch_percentage"] = -1
+weekly["avg_yac"] = -1
+weekly["avg_expected_yac"] = -1
+weekly["avg_yac_above_expectation"] = -1
+
+# Access all rows in weekly dataframe using a for loop
+for index, row in weekly.iterrows():
+    row["opponent_team"] = populate_with_opposing_team(row, pbp)
+    row["snap_count"] = populate_with_snap_counts(row, snaps)
+    # TODO: CURRENTLY BROKEN. Struggling to debug, might need to reformat into a simpler format similar to opponent_team and snap_count functions
+    ngs = populate_with_ngs(row, pass_ngs, rush_ngs, rec_ngs)
+    if ngs is not None:
+        for x in ngs.keys():
+            row[x] = ngs[x]
+    weekly.loc[index] = row
+    print(f"{index}/{len(weekly)}")
+
 # Call function (using TQDM to show progress)
 # TODO: FIND WAY TO SPEED UP, its really slow currently, there must be a better way to do it
-print("Opposing Team Lookup . . .") #Print status update
-tqdm.pandas()
-weekly['opponent_team'] = weekly.progress_apply(date_and_team_to_other_team_vectorized, args=(pbp,), axis=1)
-print("Opposing Team Lookup Complete! Sample output:\n") #Print status update
-#print(weekly.head()) #Print sample of result
+#tqdm.pandas()
+#print("Gathering opponent team data . . .") #Print status update
+#weekly['opponent_team'] = weekly.progress_apply(populate_with_opposing_team, args=(pbp,), axis=1)
+#print("Gathering snap count data . . .") #Print status update
+#weekly['snap_count'] = weekly.progress_apply(populate_with_snap_counts, args=(snaps,), axis=1)
+
+print("Outside Data Compilation Complete! Sample output:\n") #Print status update
+print(weekly.head()) #Print sample of result
 
 # Create QB DF
 print("QB Data Importing . . .\n") #Print status update
@@ -120,7 +233,21 @@ qb = qb.loc[:, ["label",
                 "rushing_first_downs",
                 "rushing_epa",
                 "rushing_2pt_conversions",
-                "fantasy_points"]]
+                "fantasy_points",
+                "snap_count",
+                "avg_time_to_throw",
+                "avg_completed_air_yards",
+                "avg_intended_air_yards",
+                "avg_air_yards_differential",
+                "aggressiveness",
+                "max_completed_air_distance",
+                "avg_air_yards_to_sticks",
+                "passer_rating",
+                "completion_percentage",
+                "expected_completion_percentage",
+                "completion_percentage_above_expectation",
+                "avg_air_distance",
+                "max_air_distance"]]
 print("\nQB Data Imported!\n") #Print status update
 qb.to_csv("data\qb.csv", index=False) #Save QB data to CSV
 
@@ -151,7 +278,18 @@ rb = rb.loc[:, ["label",
                 "air_yards_share",
                 "wopr",
                 "special_teams_tds",
-                "fantasy_points_ppr"]]
+                "fantasy_points_ppr",
+                "snap_count",
+                "efficiency",
+                "percent_attempts_gte_eight_defenders",
+                "avg_time_to_los",
+                "rush_attempts",
+                "rush_yards",
+                "expected_rush_yards",
+                "rush_yards_over_expected",
+                "avg_rush_yards",
+                "rush_yards_over_expected_per_att",
+                "rush_pct_over_expected"]]
 print("\nRB Data Imported!\n") #Print status update
 rb.to_csv("data\\rb.csv", index=False) #Save RB data to CSV
 
@@ -176,7 +314,16 @@ wr = wr.loc[:, ["label",
                 "wopr",
                 "special_teams_tds", 
                 "fantasy_points",
-                "fantasy_points_ppr"]]
+                "fantasy_points_ppr",
+                "snap_count",
+                "avg_cushion",
+                "avg_separation",
+                "avg_intended_air_yards",
+                "percent_share_of_intended_air_yards",
+                "catch_percentage",
+                "avg_yac",
+                "avg_expected_yac",
+                "avg_yac_above_expectation"]]
 print("\nWR Data Imported!\n") #Print status update
 wr.to_csv("data\wr.csv", index=False) #Save WR data to CSV
 
@@ -201,7 +348,16 @@ te = te.loc[:, ["label",
                 "wopr",
                 "special_teams_tds", 
                 "fantasy_points",
-                "fantasy_points_ppr"]]
+                "fantasy_points_ppr",
+                "snap_count",
+                "avg_cushion",
+                "avg_separation",
+                "avg_intended_air_yards",
+                "percent_share_of_intended_air_yards",
+                "catch_percentage",
+                "avg_yac",
+                "avg_expected_yac",
+                "avg_yac_above_expectation"]]
 print("\nTE Data Imported!\n") #Print status update
 te.to_csv("data\\te.csv", index=False) #Save TE data to CSV'''
 
