@@ -21,9 +21,9 @@ rec_ngs.to_csv("misc\\rec_ngs.csv", index=False)
 pass_ngs.to_csv("misc\\pass_ngs.csv", index=False)
 rush_ngs.to_csv("misc\\rush_ngs.csv", index=False)
 # Add +1 to week for NGS data
-rec_ngs["week"] = rec_ngs["week"] + 1
+'''rec_ngs["week"] = rec_ngs["week"] + 1
 pass_ngs["week"] = pass_ngs["week"] + 1
-rush_ngs["week"] = rush_ngs["week"] + 1
+rush_ngs["week"] = rush_ngs["week"] + 1''' 
 
 # Import raw snap count data
 snaps = nfl.import_snap_counts(range(first_year,last_year))
@@ -247,7 +247,8 @@ qb = qb.loc[:, ["label",
                 "expected_completion_percentage",
                 "completion_percentage_above_expectation",
                 "avg_air_distance",
-                "max_air_distance"]]
+                "max_air_distance",
+                "player_display_name"]]
 print("\nQB Data Imported!\n") #Print status update
 qb.to_csv("data\qb.csv", index=False) #Save QB data to CSV
 
@@ -289,7 +290,8 @@ rb = rb.loc[:, ["label",
                 "rush_yards_over_expected",
                 "avg_rush_yards",
                 "rush_yards_over_expected_per_att",
-                "rush_pct_over_expected"]]
+                "rush_pct_over_expected",
+                "player_display_name"]]
 print("\nRB Data Imported!\n") #Print status update
 rb.to_csv("data\\rb.csv", index=False) #Save RB data to CSV
 
@@ -323,7 +325,8 @@ wr = wr.loc[:, ["label",
                 "catch_percentage",
                 "avg_yac",
                 "avg_expected_yac",
-                "avg_yac_above_expectation"]]
+                "avg_yac_above_expectation",
+                "player_display_name"]]
 print("\nWR Data Imported!\n") #Print status update
 wr.to_csv("data\wr.csv", index=False) #Save WR data to CSV
 
@@ -357,7 +360,8 @@ te = te.loc[:, ["label",
                 "catch_percentage",
                 "avg_yac",
                 "avg_expected_yac",
-                "avg_yac_above_expectation"]]
+                "avg_yac_above_expectation",
+                "player_display_name"]]
 print("\nTE Data Imported!\n") #Print status update
 te.to_csv("data\\te.csv", index=False) #Save TE data to CSV'''
 

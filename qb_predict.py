@@ -14,6 +14,7 @@ raw_qb_data = pd.read_csv("nn_data/qb_nn.csv")
 qb_data = raw_qb_data[raw_qb_data["2023"] == 1]
 
 features = qb_data.drop(columns=["fantasy_points", "2023", "id"])
+features = features.drop(columns=["opp_passing_yards_allowed","avg_time_to_throw","attempts","opp_rushing_tds_allowed","expected_completion_percentage","rushing_fumbles","avg_air_distance","opp_passing_tds_allowed","opp_rushing_yards_allowed","pacr","rushing_2pt_conversions","passing_2pt_conversions","opp_receiving_fumbles","avg_air_yards_differential","opp_sack_fumbles_recovered","opp_receiving_fumbles_recovered","opp_sack_fumbles","opp_special_teams_tds_allowed","opp_sacks","opp_sack_yards","sack_fumbles","sacks","opp_interceptions"])
 features = features.fillna(0)
 
 target = qb_data["fantasy_points"]
@@ -40,8 +41,8 @@ print(f"Mean Absolute Error: {results['Difference'].mean()}")
 import matplotlib.pyplot as plt
 
 # Take random distribution of points to plot
-plt.scatter(results["Actual"], results["Predicted"])
-
+#plt.scatter(results["Actual"], results["Predicted"])
+plt.scatter(results["Actual"], results["Predicted"], color="blue")
 plt.xlabel("Actual")
 plt.ylabel("Predicted")
 plt.title("QB NN Model Predictions")
@@ -59,5 +60,7 @@ print("Within 2: ", len(results[results["Difference"] <= 2]), "out of", len(resu
 print("Within 2 and 5: ", len(results[results["Difference"] <= 5]) - len(results[results["Difference"] <= 2]), "out of", len(results))
 print("Within 5 and 10: ", len(results[results["Difference"] <= 10]) - len(results[results["Difference"] <= 5]), "out of", len(results))
 print("Outside 10: ", len(results[results["Difference"] > 10]), "out of", len(results))
+print("Outside 15: ", len(results[results["Difference"] > 15]), "out of", len(results))
+print("Outside 20: ", len(results[results["Difference"] > 20]), "out of", len(results))
 
 plt.show()
