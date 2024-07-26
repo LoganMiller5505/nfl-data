@@ -7,6 +7,7 @@ qb_nn = pd.read_csv("nn_data/qb_nn.csv")
 #qb_nn = qb_nn[qb_nn["2023"] == 1]
 qb_nn = qb_nn.drop(columns=["id","2023"])
 correlation_matrix = qb_nn.corr()
+pd.set_option('display.max_rows', None)
 print(correlation_matrix["fantasy_points"].sort_values(ascending=False))
 
 # Plot correlation matrix fantasy points as a bar graph
