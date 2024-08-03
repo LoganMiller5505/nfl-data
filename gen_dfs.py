@@ -14,6 +14,9 @@ last_year = 2024
 rec_ngs = nfl.import_ngs_data("receiving", range(first_year,last_year))
 pass_ngs = nfl.import_ngs_data("passing", range(first_year,last_year))
 rush_ngs = nfl.import_ngs_data("rushing", range(first_year,last_year))
+rec_ngs.fillna(-1, inplace=True)
+pass_ngs.fillna(-1, inplace=True)
+rush_ngs.fillna(-1, inplace=True)
 print(rec_ngs.head())
 print(pass_ngs.head())
 print(rush_ngs.head())
@@ -21,9 +24,9 @@ rec_ngs.to_csv("misc\\rec_ngs.csv", index=False)
 pass_ngs.to_csv("misc\\pass_ngs.csv", index=False)
 rush_ngs.to_csv("misc\\rush_ngs.csv", index=False)
 # Add +1 to week for NGS data
-'''rec_ngs["week"] = rec_ngs["week"] + 1
+rec_ngs["week"] = rec_ngs["week"] + 1
 pass_ngs["week"] = pass_ngs["week"] + 1
-rush_ngs["week"] = rush_ngs["week"] + 1''' 
+rush_ngs["week"] = rush_ngs["week"] + 1
 
 # Import raw snap count data
 snaps = nfl.import_snap_counts(range(first_year,last_year))
@@ -49,6 +52,9 @@ score_line.to_csv("misc\score_line.csv", index=False)
 pass_pfr = nfl.import_weekly_pfr("pass", range(2018,last_year))
 rush_pfr = nfl.import_weekly_pfr("rush", range(2018,last_year))
 rec_pfr = nfl.import_weekly_pfr("rec", range(2018,last_year))
+pass_pfr.fillna(-1, inplace=True)
+rush_pfr.fillna(-1, inplace=True)
+rec_pfr.fillna(-1, inplace=True)
 print(pass_pfr.head())
 print(rush_pfr.head())
 print(rec_pfr.head())
@@ -71,6 +77,7 @@ weekly = nfl.import_weekly_data(range(first_year,last_year)) #Built in function 
 weekly = weekly[weekly["season_type"].isin(["REG"])].reset_index(drop=True) #Only take data from regular season (no post season)
 print(weekly[0:5]) #Print sample of result
 print(weekly.columns) #Print column names
+print(weekly["week"].unique()) #Print unique values of "week" column
 print("\nWeekly Data Imported!\n") #Print status update
 
 # Function to lookup opposing team given weekly data
@@ -100,7 +107,7 @@ def populate_with_ngs(row, pass_ngs, rush_ngs, rec_ngs):
     if row['position'] == 'QB':
         curr_game = pass_ngs[(pass_ngs['season'] == row['season']) & ((pass_ngs['week']) == row['week']) & (pass_ngs['player_display_name'] == row['player_display_name'])]
         if curr_game.empty:
-            print("Empty")
+            print(f"NGS QB Empty: {row['player_display_name']} {row['season']} {row['week']}")
             return None
         return curr_game.loc[:,["avg_time_to_throw",
                                   "avg_completed_air_yards",
@@ -118,7 +125,7 @@ def populate_with_ngs(row, pass_ngs, rush_ngs, rec_ngs):
     elif row['position'] == 'RB':
         curr_game = rush_ngs[(rush_ngs['season'] == row['season']) & ((rush_ngs['week']) == row['week']) & (rush_ngs['player_display_name'] == row['player_display_name'])]
         if curr_game.empty:
-            print("Empty")
+            print(f"NGS RB Empty: {row['player_display_name']} {row['season']} {row['week']}")
             return None
         return curr_game.loc[:, ["efficiency",
                                  "percent_attempts_gte_eight_defenders",
@@ -133,7 +140,7 @@ def populate_with_ngs(row, pass_ngs, rush_ngs, rec_ngs):
     elif row['position'] == 'WR' or row['position'] == 'TE':
         curr_game = rec_ngs[(rec_ngs['season'] == row['season']) & ((rec_ngs['week']) == row['week']) & (rec_ngs['player_display_name'] == row['player_display_name'])]
         if curr_game.empty:
-            print("Empty")
+            print(f"NGS WR/TE Empty: {row['player_display_name']} {row['season']} {row['week']}")
             return None
         return curr_game.loc[:, ["avg_cushion",
                                  "avg_separation",
@@ -144,17 +151,18 @@ def populate_with_ngs(row, pass_ngs, rush_ngs, rec_ngs):
                                  "avg_expected_yac",
                                  "avg_yac_above_expectation"]].reset_index(drop=True).iloc[0]
     else:
-        print(f"Invalid position")
         return None
 
 def populate_with_pfr(row, pass_pfr, rush_pfr, rec_pfr):
     # Subset pfr DataFrames based on 'season' and 'week'
     if row['position'] == 'QB':
+        
         curr_game_pass = pass_pfr[(pass_pfr['season'] == row['season']) & ((pass_pfr['week']) == row['week']) & (pass_pfr['pfr_player_name'] == row['player_display_name'])]
         curr_game_rush = rush_pfr[(rush_pfr['season'] == row['season']) & ((rush_pfr['week']) == row['week']) & (rush_pfr['pfr_player_name'] == row['player_display_name'])]
 
+
         if curr_game_pass.empty:
-            print("Empty")
+            print(f"PFR QB Empty: {row['player_display_name']} {row['season']} {row['week']}")
             return None
         
         elif curr_game_rush.empty:
@@ -187,7 +195,7 @@ def populate_with_pfr(row, pass_pfr, rush_pfr, rec_pfr):
         curr_game_rec = rec_pfr[(rec_pfr['season'] == row['season']) & ((rec_pfr['week']) == row['week']) & (rec_pfr['pfr_player_name'] == row['player_display_name'])]
 
         if curr_game_rush.empty:
-            print("Empty")
+            print(f"PFR RB Empty: {row['player_display_name']} {row['season']} {row['week']}")
             return None
         
         if curr_game_rec.empty:
@@ -213,7 +221,7 @@ def populate_with_pfr(row, pass_pfr, rush_pfr, rec_pfr):
         curr_game_rush = rush_pfr[(rush_pfr['season'] == row['season']) & ((rush_pfr['week']) == row['week']) & (rush_pfr['pfr_player_name'] == row['player_display_name'])]
 
         if curr_game_rec.empty:
-            print("Empty")
+            print(f"PFR WR/TE Empty: {row['player_display_name']} {row['season']} {row['week']}")
             return None
         
         elif curr_game_rush.empty:
@@ -301,14 +309,16 @@ for index, row in weekly.iterrows():
     # TODO: CURRENTLY BROKEN. Struggling to debug, might need to reformat into a simpler format similar to opponent_team and snap_count functions
 
     ngs = populate_with_ngs(row, pass_ngs, rush_ngs, rec_ngs)
-    if ngs is not None:
+    if ngs is not None and not ngs.empty:
         for x in ngs.keys():
             row[x] = ngs[x]
     
     pfr = populate_with_pfr(row, pass_pfr, rush_pfr, rec_pfr)
-    if pfr is not None:
+    if pfr is not None and not pfr.empty:
+        #print(pfr)
         for x in pfr.keys():
             row[x] = pfr[x]
+            #print(row[x])
 
     weekly.loc[index] = row
 

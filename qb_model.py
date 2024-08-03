@@ -5,6 +5,7 @@ print("Loading Data")
 
 qb_nn_raw = pd.read_csv("nn_data/qb_nn.csv")
 qb_nn_train = qb_nn_raw[qb_nn_raw["2023"] == 0]
+#qb_nn_train = qb_nn_raw
 qb_nn_val = qb_nn_raw[qb_nn_raw["2023"] == 1]
 
 target = qb_nn_train["fantasy_points"]
@@ -28,7 +29,7 @@ print(qb_nn_val.head())
 
 # Try training on several different sklearn models and methods
 import sklearn as sk
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV, train_test_split
 X_train = features
 X_test = qb_nn_val
 y_train = target
@@ -41,7 +42,22 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 
 print("Training Random Forest Model")
-model = RandomForestRegressor(n_estimators=500, random_state=0, verbose=1)
+# Tune various hyperparameters to get the best possible model
+'''params_grid = {
+    'n_estimators': [100, 500, 1000],
+    #'max_depth': [None, 10, 20, 30],
+    'min_samples_split': [2, 5, 10],
+    #'min_samples_leaf': [1, 2, 4]
+}
+
+model = RandomForestRegressor(random_state=0, verbose=1)
+grid_search = GridSearchCV(estimator=model, param_grid=params_grid, cv=5)
+grid_search.fit(X_train, y_train)
+
+best_params = grid_search.best_params_
+print(f'Best Parameters: {best_params}')'''
+
+model = RandomForestRegressor(n_estimators=200, verbose=1)
 model.fit(X_train, y_train)
 predictions = model.predict(X_test)
 mae = mean_absolute_error(y_test, predictions)
@@ -52,8 +68,8 @@ plt.xlabel("Actual")
 plt.ylabel("Predicted")
 plt.title("QB NN Model Predictions")
 # Graph green line that represents perfect prediction (within 2 points)
-plt.plot([0, 40], [2, 42], color="green", linestyle="--")
-plt.plot([0, 40], [-2, 38], color="green", linestyle="--")
+plt.plot([0, 50], [2, 52], color="green", linestyle="--")
+plt.plot([0, 50], [-2, 48], color="green", linestyle="--")
 # Graph yellow lines that bound a difference of 5 between actual and predicted
 plt.plot([0, 40], [5, 45], color="yellow", linestyle="--")
 plt.plot([0, 40], [-5, 35], color="yellow", linestyle="--")
@@ -66,7 +82,7 @@ plt.savefig("limited_models/qb_rf.png")
 
 dump(model, "limited_models/qb_rf.joblib")
 
-from sklearn.linear_model import LinearRegression
+'''from sklearn.linear_model import LinearRegression
 # MAE: 5.8725
 print("Training Linear Regression Model")
 model = LinearRegression()
@@ -146,7 +162,7 @@ plt.plot([0, 40], [-10, 30], color="red", linestyle="--")
 plt.show()
 plt.savefig("limited_models/qb_nn.png")
 
-dump(model, "limited_models/qb_nn.joblib")
+dump(model, "limited_models/qb_nn.joblib")'''
 
 
 '''import tensorflow as tf

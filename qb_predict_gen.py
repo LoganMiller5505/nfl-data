@@ -3,15 +3,20 @@ import pandas as pd
 game_coverage = 10
 
 qb = pd.read_csv('data/qb.csv')
+qb.fillna(-1, inplace=True)
+'''for index, row in qb.iterrows():
+    print(row)'''
 qb.sort_values(by=['label'], inplace=True)
 # Exclude entries where "avg_time_to_throw","avg_completed_air_yards","avg_intended_air_yards","avg_air_yards_differential","aggressiveness","max_completed_air_distance","avg_air_yards_to_sticks","passer_rating","completion_percentage","expected_completion_percentage","completion_percentage_above_expectation","avg_air_distance", and "max_air_distance" are all -1
 qb = qb.loc[(qb['avg_time_to_throw'] != -1) & (qb['avg_completed_air_yards'] != -1) & (qb['avg_intended_air_yards'] != -1) & (qb['avg_air_yards_differential'] != -1) & (qb['aggressiveness'] != -1) & (qb['max_completed_air_distance'] != -1) & (qb['avg_air_yards_to_sticks'] != -1) & (qb['passer_rating'] != -1) & (qb['completion_percentage'] != -1) & (qb['expected_completion_percentage'] != -1) & (qb['completion_percentage_above_expectation'] != -1) & (qb['avg_air_distance'] != -1) & (qb['max_air_distance'] != -1)]
 # Exclude entires where passing_drops, passing_drop_pct, passing_bad_throws, passing_bad_throw_pct, times_blitzed, times_hurried, times_hit,times_pressured, and times_pressured_pct are all 0
-qb = qb.loc[(qb['passing_drops'] != 0) & (qb['passing_drop_pct'] != 0) & (qb['passing_bad_throws'] != 0) & (qb['passing_bad_throw_pct'] != 0) & (qb['times_blitzed'] != 0) & (qb['times_hurried'] != 0) & (qb['times_hit'] != 0) & (qb['times_pressured'] != 0) & (qb['times_pressured_pct'] != 0)]
+qb = qb.loc[(qb['passing_drops'] != -1) & (qb['passing_drop_pct'] != -1) & (qb['passing_bad_throws'] != -1) & (qb['passing_bad_throw_pct'] != -1) & (qb['times_blitzed'] != -1) & (qb['times_hurried'] != -1) & (qb['times_hit'] != -1) & (qb['times_pressured'] != -1) & (qb['times_pressured_pct'] != -1)]
 
 qb.reset_index(drop=True, inplace=True)
 
 print(qb.head())
+#print(qb["avg_time_to_throw"].head())
+#print(qb["passing_drops"].head())
 
 d = pd.read_csv('data/d.csv')
 d = d.iloc[::-1].reset_index(drop=True)
