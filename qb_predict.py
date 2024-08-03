@@ -1,132 +1,243 @@
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-
-from joblib import dump, load
-
+from joblib import load
+import nfl_data_py as nfl
 import pandas as pd
 
-from sklearn.linear_model import LinearRegression
-
 # Load the model
-model = load("limited_models/qb_lr.joblib")
+model = load("limited_models/qb_rf.joblib")
 
 # Load the data
 qb_nn = pd.read_csv("nn_data/qb_nn.csv")
-qb_nn = qb_nn[qb_nn["2023"] == 1]
 
-# Drop the columns that are not needed
-features = qb_nn.drop(columns=["fantasy_points", "2023", "id"])
-features = features.fillna(0)
+d = pd.read_csv("data/d.csv")
 
-target = qb_nn["fantasy_points"]
+players = nfl.import_players()
+schedule = nfl.import_schedules([2024]).reset_index(drop=True)
 
-# Run the model on the data
-predictions = model.predict(features)
+print("Players")
+print(players.head())
 
-# Combine Predictions and Actual into a DataFrame
-results = pd.DataFrame()
+print("Schedule")
+print(schedule.head())
 
-results["Player"] = qb_nn["id"]
+print("Players Info")
+print(players.info())
+print(players.columns)
+print(players["position_group"].unique())
+# WR, TE, RB, QB
 
-results["Actual"] = target
-results["Predicted"] = predictions
+players = players[players["position_group"] == "QB"]
+players = players[players["status"] == "ACT"].reset_index(drop=True)
+pd.set_option('display.max_columns', None)
+print(players.head())
+
+# "team_abbr"
+
+'''
+"completions",
+"attempts",
+"passing_yards",
+"passing_tds",
+"interceptions",
+"sacks",
+"sack_fumbles",
+"passing_air_yards",
+"passing_yards_after_catch",
+"passing_first_downs",
+"passing_epa",
+"passing_2pt_conversions",
+"pacr",
+"dakota",
+"carries",
+"rushing_yards",
+"rushing_tds",
+"rushing_fumbles",
+"rushing_first_downs",
+"rushing_epa",
+"rushing_2pt_conversions",
+"fantasy_points_historical"
+'''
+
+'''
+"opp_interceptions",
+"opp_sacks",
+"opp_sack_yards",
+"opp_sack_fumbles",
+"opp_sack_fumbles_recovered",
+"opp_receiving_fumbles",
+"opp_receiving_fumbles_recovered",
+"opp_rushing_yards_allowed",
+"opp_passing_yards_allowed",
+"opp_passing_tds_allowed",
+"opp_rushing_tds_allowed",
+"opp_special_teams_tds_allowed"
+'''
+
+new_nn = pd.DataFrame()
+new_nn["display_name"] = ""
+new_nn["completions"] = 0
+new_nn["attempts"] = 0
+new_nn["passing_yards"] = 0
+new_nn["passing_tds"] = 0
+new_nn["interceptions"] = 0
+new_nn["sacks"] = 0
+new_nn["sack_fumbles"] = 0
+new_nn["passing_air_yards"] = 0
+new_nn["passing_yards_after_catch"] = 0
+new_nn["passing_first_downs"] = 0
+new_nn["passing_epa"] = 0
+new_nn["passing_2pt_conversions"] = 0
+new_nn["pacr"] = 0
+new_nn["dakota"] = 0
+new_nn["carries"] = 0
+new_nn["rushing_yards"] = 0
+new_nn["rushing_tds"] = 0
+new_nn["rushing_fumbles"] = 0
+new_nn["rushing_first_downs"] = 0
+new_nn["rushing_epa"] = 0
+new_nn["rushing_2pt_conversions"] = 0
+new_nn["fantasy_points_historical"] = 0
+new_nn["snap_count"] = 0
 
 
-results["Difference"] = results["Actual"] - results["Predicted"]
-results["Difference"] = results["Difference"].abs()
-results["Difference"] = results["Difference"].round(2)
-print(results)
-print(f"Mean Absolute Error: {results['Difference'].mean()}")
-print(f"Mean Squared Error: {results['Difference'].pow(2).mean()}")
-print(f"Root Mean Squared Error: {results['Difference'].pow(2).mean() ** 0.5}")
+idx_count = 0
+for index, row in players.iterrows():
 
-# Create a plot of the results
-import matplotlib.pyplot as plt
+    most_recent_player_data = qb_nn[qb_nn["display_name"] == row["display_name"]]
 
-# Take random distribution of points to plot
-plt.scatter(results["Actual"], results["Predicted"], color="blue")
-plt.xlabel("Actual")
-plt.ylabel("Predicted")
-plt.title("QB LR Model Predictions")
-# Graph green line that represents perfect prediction (within 2 points)
-plt.plot([0, 40], [2, 42], color="green", linestyle="--")
-plt.plot([0, 40], [-2, 38], color="green", linestyle="--")
-# Graph yellow lines that bound a difference of 5 between actual and predicted
-plt.plot([0, 40], [5, 45], color="yellow", linestyle="--")
-plt.plot([0, 40], [-5, 35], color="yellow", linestyle="--")
-# Graph red lines that bound a difference of 10 between actual and predicted
-plt.plot([0, 40], [10, 50], color="red", linestyle="--")
-plt.plot([0, 40], [-10, 30], color="red", linestyle="--")
-plt.show()
-# Count how many predictions are within 2, 5, and 10 points, as well as outside of 10 points
-print("Within 2: ", len(results[results["Difference"] <= 2]), "out of", len(results))
-print("Within 2 and 5: ", len(results[results["Difference"] <= 5]) - len(results[results["Difference"] <= 2]), "out of", len(results))
-print("Within 5 and 10: ", len(results[results["Difference"] <= 10]) - len(results[results["Difference"] <= 5]), "out of", len(results))
-print("Outside 10: ", len(results[results["Difference"] > 10]), "out of", len(results))
-print("Outside 15: ", len(results[results["Difference"] > 15]), "out of", len(results))
-print("Outside 20: ", len(results[results["Difference"] > 20]), "out of", len(results))
+    if(most_recent_player_data.empty):
+        print("No data for player")
+        continue
+
+    most_recent_player_data = most_recent_player_data.iloc[-1]
+
+    for i in range(1, 19):
+        new_nn.at[idx_count,"display_name"] = row["display_name"]
+        new_nn.at[idx_count,"completions"] = most_recent_player_data["completions"]
+        new_nn.at[idx_count,"attempts"] = most_recent_player_data["attempts"]
+        new_nn.at[idx_count,"passing_yards"] = most_recent_player_data["passing_yards"]
+        new_nn.at[idx_count,"passing_tds"] = most_recent_player_data["passing_tds"]
+        new_nn.at[idx_count,"interceptions"] = most_recent_player_data["interceptions"]
+        new_nn.at[idx_count,"sacks"] = most_recent_player_data["sacks"]
+        new_nn.at[idx_count,"sack_fumbles"] = most_recent_player_data["sack_fumbles"]
+        new_nn.at[idx_count,"passing_air_yards"] = most_recent_player_data["passing_air_yards"]
+        new_nn.at[idx_count,"passing_yards_after_catch"] = most_recent_player_data["passing_yards_after_catch"]
+        new_nn.at[idx_count,"passing_first_downs"] = most_recent_player_data["passing_first_downs"]
+        new_nn.at[idx_count,"passing_epa"] = most_recent_player_data["passing_epa"]
+        new_nn.at[idx_count,"passing_2pt_conversions"] = most_recent_player_data["passing_2pt_conversions"]
+        new_nn.at[idx_count,"pacr"] = most_recent_player_data["pacr"]
+        new_nn.at[idx_count,"dakota"] = most_recent_player_data["dakota"]
+        new_nn.at[idx_count,"carries"] = most_recent_player_data["carries"]
+        new_nn.at[idx_count,"rushing_yards"] = most_recent_player_data["rushing_yards"]
+        new_nn.at[idx_count,"rushing_tds"] = most_recent_player_data["rushing_tds"]
+        new_nn.at[idx_count,"rushing_fumbles"] = most_recent_player_data["rushing_fumbles"]
+        new_nn.at[idx_count,"rushing_first_downs"] = most_recent_player_data["rushing_first_downs"]
+        new_nn.at[idx_count,"rushing_epa"] = most_recent_player_data["rushing_epa"]
+        new_nn.at[idx_count,"rushing_2pt_conversions"] = most_recent_player_data["rushing_2pt_conversions"]
+        new_nn.at[idx_count,"fantasy_points_historical"] = most_recent_player_data["fantasy_points_historical"]
+        new_nn.at[idx_count,"snap_count"] = most_recent_player_data["snap_count"]
+
+        # Get the game where away_team or home_team is the team_abbr and week is i
+        print("Week: " + str(i))
+        print("Team: " + row["team_abbr"])
+        curr_game_away = schedule[(schedule["away_team"] == row["team_abbr"]) & (schedule["week"] == i)]
+        curr_game_home = schedule[(schedule["home_team"] == row["team_abbr"]) & (schedule["week"] == i)]
+        if(curr_game_away.empty and curr_game_home.empty):
+            print("No game for player (bye week)")
+            continue
+        curr_game = curr_game_away if curr_game_home.empty else curr_game_home
+        opp_team = curr_game["away_team"].values[0] if curr_game_away.empty else curr_game["home_team"].values[0]
+        print("Opp Team: " + opp_team)
+        opp_team_data = d[d["defending_team"] == opp_team].iloc[-1]
+
+        new_nn.at[idx_count,"opp_interceptions"] = opp_team_data["interceptions"]
+        new_nn.at[idx_count,"opp_sacks"] = opp_team_data["sacks"]
+        new_nn.at[idx_count,"opp_sack_yards"] = opp_team_data["sack_yards"]
+        new_nn.at[idx_count,"opp_sack_fumbles"] = opp_team_data["sack_fumbles"]
+        new_nn.at[idx_count,"opp_sack_fumbles_recovered"] = opp_team_data["sack_fumbles_recovered"]
+        new_nn.at[idx_count,"opp_receiving_fumbles"] = opp_team_data["receiving_fumbles"]
+        new_nn.at[idx_count,"opp_receiving_fumbles_recovered"] = opp_team_data["receiving_fumbles_recovered"]
+        new_nn.at[idx_count,"opp_rushing_yards_allowed"] = opp_team_data["rushing_yards_allowed"]
+        new_nn.at[idx_count,"opp_passing_yards_allowed"] = opp_team_data["passing_yards_allowed"]
+        new_nn.at[idx_count,"opp_passing_tds_allowed"] = opp_team_data["passing_tds_allowed"]
+        new_nn.at[idx_count,"opp_rushing_tds_allowed"] = opp_team_data["rushing_tds_allowed"]
+        new_nn.at[idx_count,"opp_special_teams_tds_allowed"] = opp_team_data["special_teams_tds_allowed"]
+
+        idx_count += 1
 
 
-'''model = load_model("limited_models/qb_nn.h5")
-print(model.summary())
+print(new_nn.head(18))
 
-# Run model inference on new data
-import pandas as pd
+name = new_nn["display_name"]
 
-hashmap = pd.read_csv("hashmap/hashmap.csv")
+new_nn = new_nn.drop(columns=["display_name"])
+new_nn = new_nn.fillna(0)
+new_nn = new_nn.astype('float')
 
-print("Loading Data")
-raw_qb_data = pd.read_csv("nn_data/qb_nn.csv")
-qb_data = raw_qb_data[raw_qb_data["2023"] == 1]
+predictions = model.predict(new_nn)
 
-features = qb_data.drop(columns=["fantasy_points", "2023", "id"])
-features = features.drop(columns=["opp_passing_yards_allowed","avg_time_to_throw","attempts","opp_rushing_tds_allowed","expected_completion_percentage","rushing_fumbles","avg_air_distance","opp_passing_tds_allowed","opp_rushing_yards_allowed","pacr","rushing_2pt_conversions","passing_2pt_conversions","opp_receiving_fumbles","avg_air_yards_differential","opp_sack_fumbles_recovered","opp_receiving_fumbles_recovered","opp_sack_fumbles","opp_special_teams_tds_allowed","opp_sacks","opp_sack_yards","sack_fumbles","sacks","opp_interceptions"])
-features = features.fillna(0)
-
-target = qb_data["fantasy_points"]
-
-print("Running Inference")
-predictions = model.predict(features)
 print(predictions)
 
-# Combine Predictions and Actual into a DataFrame
-results = pd.DataFrame()
+# Save and print the predictions
+predictions = pd.DataFrame(predictions)
+predictions["fantasy_points"] = predictions
+predictions["display_name"] = name
+predictions = predictions.groupby("display_name").mean()
+predictions = predictions.sort_values(by="fantasy_points", ascending=False)
+predictions = predictions.drop(columns=[0])
+pd.set_option('display.max_rows', None)
+print(predictions)
+predictions.to_csv("final_data/qb_final_predictions.csv", index=True)
 
-# results["Player"] = qb_data["id"] passed through hashmap
-results["Player"] = qb_data["id"].map(hashmap.set_index("id")["name"])
+# ESPN RANKINGS
+'''Josh Allen - 23.5
+Jalen Hurts - 21.4
+Lamar Jackson - 20.3
+Patrick Mahomes - 19.6
+C.J. Stroud - 18.9
+Anthony Richardson - 18.9
+Joe Burrow - 18.7
+Jordan Love - 18.1
+Caleb Williams - 17.8
+Jayden Daniels - 17.7
+Baker Mayfield - 17.3
+Kyler Murray - 17.2
+Daniel Jones - 17.2
+Geno Smith - 17.2
+Justin Herbert - 17.0
+Jared Goff - 16.8
+Brock Purdy - 16.6
+Deshaun Watson - 16.4
+Dak Prescott - 16.3
+Aaron Rodgers - 16.2
+Matthew Stafford - 16.1
+Sam Darnold - 16.0
+Russell Wilson - 15.8
+Trevor Lawrence - 15.6
+Kirk Cousins - 15.6
+Tua Tagovailoa - 15.4
+Derek Carr - 15.0
+Gardner Minshew - 15.0
+Will Levis - 14.3
+Jacoby Brissett - 13.7
+Bryce Young - 13.6
+Bo Nix - 13.5'''
 
-results["Actual"] = target
-results["Predicted"] = predictions
-results["Difference"] = results["Actual"] - results["Predicted"]
-results["Difference"] = results["Difference"].abs()
-results["Difference"] = results["Difference"].round(2)
-print(results)
-print(f"Mean Absolute Error: {results['Difference'].mean()}")
+# Compare the predictions to the ESPN rankings
+espn_rankings = pd.DataFrame()
+espn_rankings["display_name"] = ["Josh Allen","Jalen Hurts","Lamar Jackson","Patrick Mahomes","C.J. Stroud","Anthony Richardson","Joe Burrow","Jordan Love","Caleb Williams","Jayden Daniels","Baker Mayfield","Kyler Murray","Daniel Jones","Geno Smith","Justin Herbert","Jared Goff","Brock Purdy","Deshaun Watson","Dak Prescott","Aaron Rodgers","Matthew Stafford","Sam Darnold","Russell Wilson","Trevor Lawrence","Kirk Cousins","Tua Tagovailoa","Derek Carr","Gardner Minshew","Will Levis","Jacoby Brissett","Bryce Young","Bo Nix"]
+espn_rankings["fantasy_points"] = [23.5,21.4,20.3,19.6,18.9,18.9,18.7,18.1,17.8,17.7,17.3,17.2,17.2,17.2,17.0,16.8,16.6,16.4,16.3,16.2,16.1,16.0,15.8,15.6,15.6,15.4,15.0,15.0,14.3,13.7,13.6,13.5]
+espn_rankings = espn_rankings.set_index("display_name")
+print(espn_rankings)
 
-# Create a plot of the results
-import matplotlib.pyplot as plt
+final_predictions = pd.read_csv("final_data/qb_final_predictions.csv")
+final_predictions = final_predictions.set_index("display_name")
+print(final_predictions)
 
-# Take random distribution of points to plot
-#plt.scatter(results["Actual"], results["Predicted"])
-plt.scatter(results["Actual"], results["Predicted"], color="blue")
-plt.xlabel("Actual")
-plt.ylabel("Predicted")
-plt.title("QB NN Model Predictions")
-# Graph green line that represents perfect prediction (within 2 points)
-plt.plot([0, 40], [2, 42], color="green", linestyle="--")
-plt.plot([0, 40], [-2, 38], color="green", linestyle="--")
-# Graph yellow lines that bound a difference of 5 between actual and predicted
-plt.plot([0, 40], [5, 45], color="yellow", linestyle="--")
-plt.plot([0, 40], [-5, 35], color="yellow", linestyle="--")
-# Graph red lines that bound a difference of 10 between actual and predicted
-plt.plot([0, 40], [10, 50], color="red", linestyle="--")
-plt.plot([0, 40], [-10, 30], color="red", linestyle="--")
-# Count how many predictions are within 2, 5, and 10 points, as well as outside of 10 points
-print("Within 2: ", len(results[results["Difference"] <= 2]), "out of", len(results))
-print("Within 2 and 5: ", len(results[results["Difference"] <= 5]) - len(results[results["Difference"] <= 2]), "out of", len(results))
-print("Within 5 and 10: ", len(results[results["Difference"] <= 10]) - len(results[results["Difference"] <= 5]), "out of", len(results))
-print("Outside 10: ", len(results[results["Difference"] > 10]), "out of", len(results))
-print("Outside 15: ", len(results[results["Difference"] > 15]), "out of", len(results))
-print("Outside 20: ", len(results[results["Difference"] > 20]), "out of", len(results))
-
-plt.show()'''
+for index, row in final_predictions.iterrows():
+    if index not in espn_rankings.index:
+        continue
+    print(index)
+    print("ESPN: " + str(espn_rankings.loc[index]["fantasy_points"]))
+    print("Predicted: " + str(row["fantasy_points"]))
+    print("Difference: " + str(espn_rankings.loc[index]["fantasy_points"] - row["fantasy_points"]))
+    print("")

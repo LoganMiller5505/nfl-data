@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 print("Loading Data")
 
 qb_nn_raw = pd.read_csv("nn_data/qb_nn.csv")
-qb_nn_train = qb_nn_raw[qb_nn_raw["2023"] == 0]
-#qb_nn_train = qb_nn_raw
+#qb_nn_train = qb_nn_raw[qb_nn_raw["2023"] == 0]
+qb_nn_train = qb_nn_raw
 qb_nn_val = qb_nn_raw[qb_nn_raw["2023"] == 1]
 
 target = qb_nn_train["fantasy_points"]
@@ -13,7 +13,7 @@ target = target.fillna(0)
 target = target.astype('float')
 print(target.head())
 
-features = qb_nn_train.drop(columns=["fantasy_points","2023","id"])
+features = qb_nn_train.drop(columns=["fantasy_points","2023","id","display_name"])
 # Drop features with low coorelation values
 # features = features.drop(columns=["opp_passing_yards_allowed","avg_time_to_throw","attempts","opp_rushing_tds_allowed","expected_completion_percentage","rushing_fumbles","avg_air_distance","opp_passing_tds_allowed","opp_rushing_yards_allowed","pacr","rushing_2pt_conversions","passing_2pt_conversions","opp_receiving_fumbles","avg_air_yards_differential","opp_sack_fumbles_recovered","opp_receiving_fumbles_recovered","opp_sack_fumbles","opp_special_teams_tds_allowed","opp_sacks","opp_sack_yards","sack_fumbles","sacks","opp_interceptions"])
 features = features.fillna(0)
@@ -21,7 +21,7 @@ features = features.astype('float')
 print(features.head())
 
 qb_nn_val_results = qb_nn_val["fantasy_points"]
-qb_nn_val = qb_nn_val.drop(columns=["fantasy_points","2023","id"])
+qb_nn_val = qb_nn_val.drop(columns=["fantasy_points","2023","id","display_name"])
 # qb_nn_val = qb_nn_val.drop(columns=["opp_passing_yards_allowed","avg_time_to_throw","attempts","opp_rushing_tds_allowed","expected_completion_percentage","rushing_fumbles","avg_air_distance","opp_passing_tds_allowed","opp_rushing_yards_allowed","pacr","rushing_2pt_conversions","passing_2pt_conversions","opp_receiving_fumbles","avg_air_yards_differential","opp_sack_fumbles_recovered","opp_receiving_fumbles_recovered","opp_sack_fumbles","opp_special_teams_tds_allowed","opp_sacks","opp_sack_yards","sack_fumbles","sacks","opp_interceptions"])
 qb_nn_val = qb_nn_val.fillna(0)
 qb_nn_val = qb_nn_val.astype('float')
@@ -57,7 +57,7 @@ grid_search.fit(X_train, y_train)
 best_params = grid_search.best_params_
 print(f'Best Parameters: {best_params}')'''
 
-model = RandomForestRegressor(n_estimators=200, verbose=1)
+model = RandomForestRegressor(n_estimators=1000, verbose=2)
 model.fit(X_train, y_train)
 predictions = model.predict(X_test)
 mae = mean_absolute_error(y_test, predictions)
@@ -71,11 +71,11 @@ plt.title("QB NN Model Predictions")
 plt.plot([0, 50], [2, 52], color="green", linestyle="--")
 plt.plot([0, 50], [-2, 48], color="green", linestyle="--")
 # Graph yellow lines that bound a difference of 5 between actual and predicted
-plt.plot([0, 40], [5, 45], color="yellow", linestyle="--")
-plt.plot([0, 40], [-5, 35], color="yellow", linestyle="--")
+plt.plot([0, 50], [5, 55], color="yellow", linestyle="--")
+plt.plot([0, 50], [-5, 45], color="yellow", linestyle="--")
 # Graph red lines that bound a difference of 10 between actual and predicted
-plt.plot([0, 40], [10, 50], color="red", linestyle="--")
-plt.plot([0, 40], [-10, 30], color="red", linestyle="--")
+plt.plot([0, 50], [10, 60], color="red", linestyle="--")
+plt.plot([0, 50], [-10, 40], color="red", linestyle="--")
 # Count how many predictions are within 2, 5, and 10 points, as well as outside of 10 points
 plt.show()
 plt.savefig("limited_models/qb_rf.png")

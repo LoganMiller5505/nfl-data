@@ -1,6 +1,6 @@
 import pandas as pd
 
-game_coverage = 10
+game_coverage = 20
 
 qb = pd.read_csv('data/qb.csv')
 qb.fillna(-1, inplace=True)
@@ -8,9 +8,9 @@ qb.fillna(-1, inplace=True)
     print(row)'''
 qb.sort_values(by=['label'], inplace=True)
 # Exclude entries where "avg_time_to_throw","avg_completed_air_yards","avg_intended_air_yards","avg_air_yards_differential","aggressiveness","max_completed_air_distance","avg_air_yards_to_sticks","passer_rating","completion_percentage","expected_completion_percentage","completion_percentage_above_expectation","avg_air_distance", and "max_air_distance" are all -1
-qb = qb.loc[(qb['avg_time_to_throw'] != -1) & (qb['avg_completed_air_yards'] != -1) & (qb['avg_intended_air_yards'] != -1) & (qb['avg_air_yards_differential'] != -1) & (qb['aggressiveness'] != -1) & (qb['max_completed_air_distance'] != -1) & (qb['avg_air_yards_to_sticks'] != -1) & (qb['passer_rating'] != -1) & (qb['completion_percentage'] != -1) & (qb['expected_completion_percentage'] != -1) & (qb['completion_percentage_above_expectation'] != -1) & (qb['avg_air_distance'] != -1) & (qb['max_air_distance'] != -1)]
+#qb = qb.loc[(qb['avg_time_to_throw'] != -1) & (qb['avg_completed_air_yards'] != -1) & (qb['avg_intended_air_yards'] != -1) & (qb['avg_air_yards_differential'] != -1) & (qb['aggressiveness'] != -1) & (qb['max_completed_air_distance'] != -1) & (qb['avg_air_yards_to_sticks'] != -1) & (qb['passer_rating'] != -1) & (qb['completion_percentage'] != -1) & (qb['expected_completion_percentage'] != -1) & (qb['completion_percentage_above_expectation'] != -1) & (qb['avg_air_distance'] != -1) & (qb['max_air_distance'] != -1)]
 # Exclude entires where passing_drops, passing_drop_pct, passing_bad_throws, passing_bad_throw_pct, times_blitzed, times_hurried, times_hit,times_pressured, and times_pressured_pct are all 0
-qb = qb.loc[(qb['passing_drops'] != -1) & (qb['passing_drop_pct'] != -1) & (qb['passing_bad_throws'] != -1) & (qb['passing_bad_throw_pct'] != -1) & (qb['times_blitzed'] != -1) & (qb['times_hurried'] != -1) & (qb['times_hit'] != -1) & (qb['times_pressured'] != -1) & (qb['times_pressured_pct'] != -1)]
+#qb = qb.loc[(qb['passing_drops'] != -1) & (qb['passing_drop_pct'] != -1) & (qb['passing_bad_throws'] != -1) & (qb['passing_bad_throw_pct'] != -1) & (qb['times_blitzed'] != -1) & (qb['times_hurried'] != -1) & (qb['times_hit'] != -1) & (qb['times_pressured'] != -1) & (qb['times_pressured_pct'] != -1)]
 
 qb.reset_index(drop=True, inplace=True)
 
@@ -98,34 +98,7 @@ qb_nn = pd.concat([qb_nn, pd.DataFrame(columns=["completions",
                                                 "rushing_epa",
                                                 "rushing_2pt_conversions",
                                                 "fantasy_points_historical",
-                                                "snap_count",
-                                                "avg_time_to_throw",
-                                                "avg_completed_air_yards",
-                                                "avg_intended_air_yards",
-                                                "avg_air_yards_differential",
-                                                "aggressiveness",
-                                                "max_completed_air_distance",
-                                                "avg_air_yards_to_sticks",
-                                                "passer_rating",
-                                                "completion_percentage",
-                                                "expected_completion_percentage",
-                                                "completion_percentage_above_expectation",
-                                                "avg_air_distance",
-                                                "max_air_distance",
-                                                "passing_drops",
-                                                "passing_drop_pct",
-                                                "passing_bad_throws",
-                                                "passing_bad_throw_pct",
-                                                "times_blitzed",
-                                                "times_hurried",
-                                                "times_hit",
-                                                "times_pressured",
-                                                "times_pressured_pct",
-                                                "rushing_yards_before_contact",
-                                                "rushing_yards_before_contact_avg",
-                                                "rushing_yards_after_contact",
-                                                "rushing_yards_after_contact_avg",
-                                                "rushing_broken_tackles"])])
+                                                "snap_count"])])
 
 qb_nn = pd.concat([qb_nn, pd.DataFrame(columns=["opp_interceptions",
                                                 "opp_sacks",
@@ -143,6 +116,7 @@ qb_nn = pd.concat([qb_nn, pd.DataFrame(columns=["opp_interceptions",
 qb_nn.insert(0, 'fantasy_points', 0)
 qb_nn.insert(0, '2023', False)
 qb_nn.insert(0, 'id', "")
+qb_nn.insert(0, 'display_name', "")
 
 qb_nn = qb_nn.reindex(qb.index)
 
@@ -170,6 +144,7 @@ for i in range(0,len(qb_nn)):
     
     qb_nn.at[i, "2023"] = season == "2023"
     qb_nn.at[i, "id"] = player_id
+    qb_nn.at[i, "display_name"] = data["player_display_name"]
 
     player_history = qb.loc[(player_id == qb['label'].str[:10])].reset_index(drop=True)
 
@@ -263,7 +238,7 @@ for i in range(0,len(qb_nn)):
 
         snap_count_count = 0
 
-        avg_time_to_throw_count = 0
+        '''avg_time_to_throw_count = 0
         avg_completed_air_yards_count = 0
         avg_intended_air_yards_count = 0
         avg_air_yards_differential_count = 0
@@ -290,7 +265,7 @@ for i in range(0,len(qb_nn)):
         rushing_yards_before_contact_avg_count = 0
         rushing_yards_after_contact_count = 0
         rushing_yards_after_contact_avg_count = 0
-        rushing_broken_tackles_count = 0
+        rushing_broken_tackles_count = 0'''
 
         while(count!=game_coverage):
             completions_count += player_history.iloc[loop_idx]["completions"]
@@ -318,7 +293,7 @@ for i in range(0,len(qb_nn)):
 
             snap_count_count += player_history.iloc[loop_idx]["snap_count"]
 
-            avg_time_to_throw_count += player_history.iloc[loop_idx]["avg_time_to_throw"]
+            '''avg_time_to_throw_count += player_history.iloc[loop_idx]["avg_time_to_throw"]
             avg_completed_air_yards_count += player_history.iloc[loop_idx]["avg_completed_air_yards"]
             avg_intended_air_yards_count += player_history.iloc[loop_idx]["avg_intended_air_yards"]
             avg_air_yards_differential_count += player_history.iloc[loop_idx]["avg_air_yards_differential"]
@@ -345,7 +320,7 @@ for i in range(0,len(qb_nn)):
             rushing_yards_before_contact_avg_count += player_history.iloc[loop_idx]["rushing_yards_before_contact_avg"]
             rushing_yards_after_contact_count += player_history.iloc[loop_idx]["rushing_yards_after_contact"]
             rushing_yards_after_contact_avg_count += player_history.iloc[loop_idx]["rushing_yards_after_contact_avg"]
-            rushing_broken_tackles_count += player_history.iloc[loop_idx]["rushing_broken_tackles"]
+            rushing_broken_tackles_count += player_history.iloc[loop_idx]["rushing_broken_tackles"]'''
 
             loop_idx-=1
 
@@ -380,7 +355,7 @@ for i in range(0,len(qb_nn)):
 
         qb_nn.at[i,"snap_count"] = snap_count_count/game_coverage
 
-        qb_nn.at[i,"avg_time_to_throw"] = avg_time_to_throw_count/game_coverage
+        '''qb_nn.at[i,"avg_time_to_throw"] = avg_time_to_throw_count/game_coverage
         qb_nn.at[i,"avg_completed_air_yards"] = avg_completed_air_yards_count/game_coverage
         qb_nn.at[i,"avg_intended_air_yards"] = avg_intended_air_yards_count/game_coverage
         qb_nn.at[i,"avg_air_yards_differential"] = avg_air_yards_differential_count/game_coverage
@@ -407,7 +382,7 @@ for i in range(0,len(qb_nn)):
         qb_nn.at[i,"rushing_yards_before_contact_avg"] = rushing_yards_before_contact_avg_count/game_coverage
         qb_nn.at[i,"rushing_yards_after_contact"] = rushing_yards_after_contact_count/game_coverage
         qb_nn.at[i,"rushing_yards_after_contact_avg"] = rushing_yards_after_contact_avg_count/game_coverage
-        qb_nn.at[i,"rushing_broken_tackles"] = rushing_broken_tackles_count/game_coverage
+        qb_nn.at[i,"rushing_broken_tackles"] = rushing_broken_tackles_count/game_coverage'''
     
     qb_nn.at[i,"fantasy_points"] = data["fantasy_points"]
 

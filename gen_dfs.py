@@ -7,11 +7,11 @@ from tqdm import tqdm #Used to display a progress bar during length dataframe op
 tqdm.pandas() #Necessary function for using with pandas
 
 # Set range for years to save CVs of (where first_year is inclusive, and last_year is exclusive)
-first_year = 2018
+first_year = 2012
 last_year = 2024
 
 # Import raw NGS data
-rec_ngs = nfl.import_ngs_data("receiving", range(first_year,last_year))
+'''rec_ngs = nfl.import_ngs_data("receiving", range(first_year,last_year))
 pass_ngs = nfl.import_ngs_data("passing", range(first_year,last_year))
 rush_ngs = nfl.import_ngs_data("rushing", range(first_year,last_year))
 rec_ngs.fillna(-1, inplace=True)
@@ -26,7 +26,7 @@ rush_ngs.to_csv("misc\\rush_ngs.csv", index=False)
 # Add +1 to week for NGS data
 rec_ngs["week"] = rec_ngs["week"] + 1
 pass_ngs["week"] = pass_ngs["week"] + 1
-rush_ngs["week"] = rush_ngs["week"] + 1
+rush_ngs["week"] = rush_ngs["week"] + 1'''
 
 # Import raw snap count data
 snaps = nfl.import_snap_counts(range(first_year,last_year))
@@ -49,7 +49,7 @@ print(score_line.head())
 score_line.to_csv("misc\score_line.csv", index=False)
 
 # Import raw PFR data
-pass_pfr = nfl.import_weekly_pfr("pass", range(2018,last_year))
+'''pass_pfr = nfl.import_weekly_pfr("pass", range(2018,last_year))
 rush_pfr = nfl.import_weekly_pfr("rush", range(2018,last_year))
 rec_pfr = nfl.import_weekly_pfr("rec", range(2018,last_year))
 pass_pfr.fillna(-1, inplace=True)
@@ -61,7 +61,7 @@ print(rec_pfr.head())
 pass_pfr.to_csv("misc\pass_pfr.csv", index=False)
 rush_pfr.to_csv("misc\\rush_pfr.csv", index=False)
 rec_pfr.to_csv("misc\\rec_pfr.csv", index=False)
-print("\nPFR Data Imported!\n")
+print("\nPFR Data Imported!\n")'''
 
 # Import raw PBP data
 print("\nPBP Data Importing . . .\n") #Print status update
@@ -246,7 +246,7 @@ def populate_with_pfr(row, pass_pfr, rush_pfr, rec_pfr):
 weekly["opponent_team"] = "null"
 weekly["snap_count"] = -1
 
-weekly["avg_time_to_throw"] = -1
+'''weekly["avg_time_to_throw"] = -1
 weekly["avg_completed_air_yards"] = -1
 weekly["avg_intended_air_yards"] = -1
 weekly["avg_air_yards_differential"] = -1
@@ -300,7 +300,7 @@ weekly["receiving_broken_tackles"] = -1
 weekly["receiving_drop"] = -1
 weekly["receiving_drop_pct"] = -1
 weekly["receiving_int"] = -1
-weekly["receiving_rat"] = -1
+weekly["receiving_rat"] = -1'''
 
 # Access all rows in weekly dataframe using a for loop
 for index, row in weekly.iterrows():
@@ -308,7 +308,7 @@ for index, row in weekly.iterrows():
     row["snap_count"] = populate_with_snap_counts(row, snaps)
     # TODO: CURRENTLY BROKEN. Struggling to debug, might need to reformat into a simpler format similar to opponent_team and snap_count functions
 
-    ngs = populate_with_ngs(row, pass_ngs, rush_ngs, rec_ngs)
+    '''ngs = populate_with_ngs(row, pass_ngs, rush_ngs, rec_ngs)
     if ngs is not None and not ngs.empty:
         for x in ngs.keys():
             row[x] = ngs[x]
@@ -318,7 +318,7 @@ for index, row in weekly.iterrows():
         #print(pfr)
         for x in pfr.keys():
             row[x] = pfr[x]
-            #print(row[x])
+            #print(row[x])'''
 
     weekly.loc[index] = row
 
@@ -339,7 +339,8 @@ print(weekly.head()) #Print sample of result
 print("QB Data Importing . . .\n") #Print status update
 qb = weekly[weekly["position"].isin(["QB"])].reset_index(drop=True) #Create new dataframe for relevant QB information
 qb["label"] = qb.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
-qb = qb.loc[:, ["label",
+qb = qb.loc[:, ["player_display_name",
+                "label",
                 "completions",
                 "attempts",
                 "passing_yards",
@@ -362,35 +363,7 @@ qb = qb.loc[:, ["label",
                 "rushing_epa",
                 "rushing_2pt_conversions",
                 "fantasy_points",
-                "snap_count",
-                "avg_time_to_throw",
-                "avg_completed_air_yards",
-                "avg_intended_air_yards",
-                "avg_air_yards_differential",
-                "aggressiveness",
-                "max_completed_air_distance",
-                "avg_air_yards_to_sticks",
-                "passer_rating",
-                "completion_percentage",
-                "expected_completion_percentage",
-                "completion_percentage_above_expectation",
-                "avg_air_distance",
-                "max_air_distance",
-                "passing_drops",
-                "passing_drop_pct",
-                "passing_bad_throws",
-                "passing_bad_throw_pct",
-                "times_blitzed",
-                "times_hurried",
-                "times_hit",
-                "times_pressured",
-                "times_pressured_pct",
-                "rushing_yards_before_contact",
-                "rushing_yards_before_contact_avg",
-                "rushing_yards_after_contact",
-                "rushing_yards_after_contact_avg",
-                "rushing_broken_tackles",
-                "player_display_name"]]
+                "snap_count"]]
 print("\nQB Data Imported!\n") #Print status update
 qb.to_csv("data\qb.csv", index=False) #Save QB data to CSV
 
@@ -422,28 +395,7 @@ rb = rb.loc[:, ["label",
                 "wopr",
                 "special_teams_tds",
                 "fantasy_points_ppr",
-                "snap_count",
-                "efficiency",
-                "percent_attempts_gte_eight_defenders",
-                "avg_time_to_los",
-                "rush_attempts",
-                "rush_yards",
-                "expected_rush_yards",
-                "rush_yards_over_expected",
-                "avg_rush_yards",
-                "rush_yards_over_expected_per_att",
-                "rush_pct_over_expected",
-                "rushing_yards_before_contact",
-                "rushing_yards_before_contact_avg",
-                "rushing_yards_after_contact",
-                "rushing_yards_after_contact_avg",
-                "rushing_broken_tackles",
-                "receiving_broken_tackles",
-                "receiving_drop",
-                "receiving_drop_pct",
-                "receiving_int",
-                "receiving_rat",
-                "player_display_name"]]
+                "snap_count"]]
 print("\nRB Data Imported!\n") #Print status update
 rb.to_csv("data\\rb.csv", index=False) #Save RB data to CSV
 
@@ -469,21 +421,7 @@ wr = wr.loc[:, ["label",
                 "special_teams_tds", 
                 "fantasy_points",
                 "fantasy_points_ppr",
-                "snap_count",
-                "avg_cushion",
-                "avg_separation",
-                "avg_intended_air_yards",
-                "percent_share_of_intended_air_yards",
-                "catch_percentage",
-                "avg_yac",
-                "avg_expected_yac",
-                "avg_yac_above_expectation",
-                "receiving_broken_tackles",
-                "receiving_drop",
-                "receiving_drop_pct",
-                "receiving_int",
-                "receiving_rat",
-                "player_display_name"]]
+                "snap_count"]]
 print("\nWR Data Imported!\n") #Print status update
 wr.to_csv("data\wr.csv", index=False) #Save WR data to CSV
 
@@ -509,21 +447,7 @@ te = te.loc[:, ["label",
                 "special_teams_tds", 
                 "fantasy_points",
                 "fantasy_points_ppr",
-                "snap_count",
-                "avg_cushion",
-                "avg_separation",
-                "avg_intended_air_yards",
-                "percent_share_of_intended_air_yards",
-                "catch_percentage",
-                "avg_yac",
-                "avg_expected_yac",
-                "avg_yac_above_expectation",
-                "receiving_broken_tackles",
-                "receiving_drop",
-                "receiving_drop_pct",
-                "receiving_int",
-                "receiving_rat",
-                "player_display_name"]]
+                "snap_count"]]
 print("\nTE Data Imported!\n") #Print status update
 te.to_csv("data\\te.csv", index=False) #Save TE data to CSV'''
 
