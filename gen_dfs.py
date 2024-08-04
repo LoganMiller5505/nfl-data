@@ -371,7 +371,8 @@ qb.to_csv("data\qb.csv", index=False) #Save QB data to CSV
 print("RB Data Importing . . .\n") #Print status update
 rb = weekly[weekly["position"].isin(["RB"])].reset_index(drop=True) #Create new dataframe for relevant RB information
 rb["label"] = rb.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
-rb = rb.loc[:, ["label",
+rb = rb.loc[:, ["player_display_name",
+                "label",
                 "carries",
                 "rushing_yards",
                 "rushing_tds",
@@ -403,7 +404,8 @@ rb.to_csv("data\\rb.csv", index=False) #Save RB data to CSV
 print("WR Data Importing . . .\n") #Print status update
 wr = weekly[weekly["position"].isin(["WR"])].reset_index(drop=True) #Create new dataframe for relevant WR information
 wr["label"] = wr.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
-wr = wr.loc[:, ["label",
+wr = wr.loc[:, ["player_display_name",
+                "label",
                 "receptions",
                 "targets",
                 "receiving_yards",
@@ -429,7 +431,8 @@ wr.to_csv("data\wr.csv", index=False) #Save WR data to CSV
 print("TE Data Importing . . .\n") #Print status update
 te = weekly[weekly["position"].isin(["TE"])].reset_index(drop=True) #Create new dataframe for relevant TE information
 te["label"] = te.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
-te = te.loc[:, ["label",
+te = te.loc[:, ["player_display_name",
+                "label",
                 "receptions",
                 "targets",
                 "receiving_yards",
