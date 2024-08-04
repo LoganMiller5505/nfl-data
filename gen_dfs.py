@@ -7,8 +7,61 @@ from tqdm import tqdm #Used to display a progress bar during length dataframe op
 tqdm.pandas() #Necessary function for using with pandas
 
 # Set range for years to save CVs of (where first_year is inclusive, and last_year is exclusive)
-first_year = 2004
+first_year = 2012
 last_year = 2024
+
+# Import raw NGS data
+'''rec_ngs = nfl.import_ngs_data("receiving", range(first_year,last_year))
+pass_ngs = nfl.import_ngs_data("passing", range(first_year,last_year))
+rush_ngs = nfl.import_ngs_data("rushing", range(first_year,last_year))
+rec_ngs.fillna(-1, inplace=True)
+pass_ngs.fillna(-1, inplace=True)
+rush_ngs.fillna(-1, inplace=True)
+print(rec_ngs.head())
+print(pass_ngs.head())
+print(rush_ngs.head())
+rec_ngs.to_csv("misc\\rec_ngs.csv", index=False)
+pass_ngs.to_csv("misc\\pass_ngs.csv", index=False)
+rush_ngs.to_csv("misc\\rush_ngs.csv", index=False)
+# Add +1 to week for NGS data
+rec_ngs["week"] = rec_ngs["week"] + 1
+pass_ngs["week"] = pass_ngs["week"] + 1
+rush_ngs["week"] = rush_ngs["week"] + 1'''
+
+# Import raw snap count data
+snaps = nfl.import_snap_counts(range(first_year,last_year))
+print(snaps.head())
+snaps.to_csv("misc\\snaps.csv", index=False)
+
+# Import raw win total data
+wins = nfl.import_win_totals(range(first_year,last_year))
+print(wins.head())
+wins.to_csv("misc\\wins.csv", index=False)
+
+# Import raw QBR data
+qbr = nfl.import_qbr(range(first_year,last_year))
+print(qbr.head())
+qbr.to_csv("misc\\qbr.csv", index=False)
+
+# Import raw Score Line data
+score_line = nfl.import_sc_lines(range(2018,last_year))
+print(score_line.head())
+score_line.to_csv("misc\score_line.csv", index=False)
+
+# Import raw PFR data
+'''pass_pfr = nfl.import_weekly_pfr("pass", range(2018,last_year))
+rush_pfr = nfl.import_weekly_pfr("rush", range(2018,last_year))
+rec_pfr = nfl.import_weekly_pfr("rec", range(2018,last_year))
+pass_pfr.fillna(-1, inplace=True)
+rush_pfr.fillna(-1, inplace=True)
+rec_pfr.fillna(-1, inplace=True)
+print(pass_pfr.head())
+print(rush_pfr.head())
+print(rec_pfr.head())
+pass_pfr.to_csv("misc\pass_pfr.csv", index=False)
+rush_pfr.to_csv("misc\\rush_pfr.csv", index=False)
+rec_pfr.to_csv("misc\\rec_pfr.csv", index=False)
+print("\nPFR Data Imported!\n")'''
 
 # Import raw PBP data
 print("\nPBP Data Importing . . .\n") #Print status update
@@ -22,11 +75,13 @@ print("\nPBP Data Imported!\n") #Print status update
 print("Weekly Data Importing . . .\n") #Print status update
 weekly = nfl.import_weekly_data(range(first_year,last_year)) #Built in function collecting raw weekly data within year range
 weekly = weekly[weekly["season_type"].isin(["REG"])].reset_index(drop=True) #Only take data from regular season (no post season)
-weekly[0:5] #Print sample of result
+print(weekly[0:5]) #Print sample of result
+print(weekly.columns) #Print column names
+print(weekly["week"].unique()) #Print unique values of "week" column
 print("\nWeekly Data Imported!\n") #Print status update
 
 # Function to lookup opposing team given weekly data
-def date_and_team_to_other_team_vectorized(row, pbp):
+def populate_with_opposing_team(row, pbp):
     # Subset pbp DataFrame based on 'season' and 'week'
     curr_game = pbp[(pbp['year'] == row['season']) & (pbp['week'] == row['week'])]
 
@@ -43,19 +98,249 @@ def date_and_team_to_other_team_vectorized(row, pbp):
     # Return an empty string if no match is found (bye week)
     return ''
 
+def populate_with_snap_counts(row, snaps):
+    snap_count = snaps[(snaps['season'] == row['season']) & (snaps['week'] == row['week']) & (snaps['player'] == row['player_display_name'])]
+    return snap_count['offense_snaps'].sum()
+
+def populate_with_ngs(row, pass_ngs, rush_ngs, rec_ngs):
+    # Subset ngs DataFrames based on 'season' and 'week'
+    if row['position'] == 'QB':
+        curr_game = pass_ngs[(pass_ngs['season'] == row['season']) & ((pass_ngs['week']) == row['week']) & (pass_ngs['player_display_name'] == row['player_display_name'])]
+        if curr_game.empty:
+            print(f"NGS QB Empty: {row['player_display_name']} {row['season']} {row['week']}")
+            return None
+        return curr_game.loc[:,["avg_time_to_throw",
+                                  "avg_completed_air_yards",
+                                  "avg_intended_air_yards",
+                                  "avg_air_yards_differential",
+                                  "aggressiveness",
+                                  "max_completed_air_distance",
+                                  "avg_air_yards_to_sticks",
+                                  "passer_rating",
+                                  "completion_percentage",
+                                  "expected_completion_percentage",
+                                  "completion_percentage_above_expectation",
+                                  "avg_air_distance",
+                                  "max_air_distance"]].reset_index(drop=True).iloc[0]
+    elif row['position'] == 'RB':
+        curr_game = rush_ngs[(rush_ngs['season'] == row['season']) & ((rush_ngs['week']) == row['week']) & (rush_ngs['player_display_name'] == row['player_display_name'])]
+        if curr_game.empty:
+            print(f"NGS RB Empty: {row['player_display_name']} {row['season']} {row['week']}")
+            return None
+        return curr_game.loc[:, ["efficiency",
+                                 "percent_attempts_gte_eight_defenders",
+                                 "avg_time_to_los",
+                                 "rush_attempts",
+                                 "rush_yards",
+                                 "expected_rush_yards",
+                                 "rush_yards_over_expected",
+                                 "avg_rush_yards",
+                                 "rush_yards_over_expected_per_att",
+                                 "rush_pct_over_expected"]].reset_index(drop=True).iloc[0]
+    elif row['position'] == 'WR' or row['position'] == 'TE':
+        curr_game = rec_ngs[(rec_ngs['season'] == row['season']) & ((rec_ngs['week']) == row['week']) & (rec_ngs['player_display_name'] == row['player_display_name'])]
+        if curr_game.empty:
+            print(f"NGS WR/TE Empty: {row['player_display_name']} {row['season']} {row['week']}")
+            return None
+        return curr_game.loc[:, ["avg_cushion",
+                                 "avg_separation",
+                                 "avg_intended_air_yards",
+                                 "percent_share_of_intended_air_yards",
+                                 "catch_percentage",
+                                 "avg_yac",
+                                 "avg_expected_yac",
+                                 "avg_yac_above_expectation"]].reset_index(drop=True).iloc[0]
+    else:
+        return None
+
+def populate_with_pfr(row, pass_pfr, rush_pfr, rec_pfr):
+    # Subset pfr DataFrames based on 'season' and 'week'
+    if row['position'] == 'QB':
+        
+        curr_game_pass = pass_pfr[(pass_pfr['season'] == row['season']) & ((pass_pfr['week']) == row['week']) & (pass_pfr['pfr_player_name'] == row['player_display_name'])]
+        curr_game_rush = rush_pfr[(rush_pfr['season'] == row['season']) & ((rush_pfr['week']) == row['week']) & (rush_pfr['pfr_player_name'] == row['player_display_name'])]
+
+
+        if curr_game_pass.empty:
+            print(f"PFR QB Empty: {row['player_display_name']} {row['season']} {row['week']}")
+            return None
+        
+        elif curr_game_rush.empty:
+            return (curr_game_pass.loc[:,["passing_drops",
+                                "passing_drop_pct",
+                                "passing_bad_throws",
+                                "passing_bad_throw_pct",
+                                "times_blitzed",
+                                "times_hurried",
+                                "times_hit",
+                                "times_pressured",
+                                "times_pressured_pct"]])
+        
+        return (curr_game_pass.loc[:,["passing_drops",
+                                "passing_drop_pct",
+                                "passing_bad_throws",
+                                "passing_bad_throw_pct",
+                                "times_blitzed",
+                                "times_hurried",
+                                "times_hit",
+                                "times_pressured",
+                                "times_pressured_pct"]] + curr_game_rush.loc[:,["rushing_yards_before_contact",
+                                                                                     "rushing_yards_before_contact_avg",
+                                                                                     "rushing_yards_after_contact",
+                                                                                     "rushing_yards_after_contact_avg",
+                                                                                     "rushing_broken_tackles"]].reset_index(drop=True).iloc[0])
+    
+    elif row['position'] == 'RB':
+        curr_game_rush = rush_pfr[(rush_pfr['season'] == row['season']) & ((rush_pfr['week']) == row['week']) & (rush_pfr['pfr_player_name'] == row['player_display_name'])]
+        curr_game_rec = rec_pfr[(rec_pfr['season'] == row['season']) & ((rec_pfr['week']) == row['week']) & (rec_pfr['pfr_player_name'] == row['player_display_name'])]
+
+        if curr_game_rush.empty:
+            print(f"PFR RB Empty: {row['player_display_name']} {row['season']} {row['week']}")
+            return None
+        
+        if curr_game_rec.empty:
+            return (curr_game_rush.loc[:, ["rushing_yards_before_contact",
+                                 "rushing_yards_before_contact_avg",
+                                  "rushing_yards_after_contact",
+                                "rushing_yards_after_contact_avg",
+                                 "rushing_broken_tackles"]])
+        
+        return (curr_game_rush.loc[:, ["rushing_yards_before_contact",
+                                 "rushing_yards_before_contact_avg",
+                                  "rushing_yards_after_contact",
+                                "rushing_yards_after_contact_avg",
+                                 "rushing_broken_tackles"]] + (curr_game_rec.loc[:,["receiving_broken_tackles",
+                                                                                       "passing_drops",
+                                                                                       "receiving_drop",
+                                                                                       "receiving_drop_pct",
+                                                                                       "receiving_int",
+                                                                                       "receiving_rat"]]).reset_index(drop=True).iloc[0])
+    
+    elif row['position'] == 'WR' or row['position'] == 'TE':
+        curr_game_rec = rec_pfr[(rec_pfr['season'] == row['season']) & ((rec_pfr['week']) == row['week']) & (rec_pfr['pfr_player_name'] == row['player_display_name'])]
+        curr_game_rush = rush_pfr[(rush_pfr['season'] == row['season']) & ((rush_pfr['week']) == row['week']) & (rush_pfr['pfr_player_name'] == row['player_display_name'])]
+
+        if curr_game_rec.empty:
+            print(f"PFR WR/TE Empty: {row['player_display_name']} {row['season']} {row['week']}")
+            return None
+        
+        elif curr_game_rush.empty:
+            return (curr_game_rec.loc[:, ["receiving_broken_tackles",
+                                    "passing_drops",
+                                    "receiving_drop",
+                                    "receiving_drop_pct",
+                                    "receiving_int",
+                                    "receiving_rat"]])
+        
+        return (curr_game_rec.loc[:, ["receiving_broken_tackles",
+                                    "passing_drops",
+                                    "receiving_drop",
+                                    "receiving_drop_pct",
+                                    "receiving_int",
+                                    "receiving_rat"]] + (curr_game_rush.loc[:,["rushing_yards_before_contact",
+                                                                                        "rushing_yards_before_contact_avg",
+                                                                                        "rushing_yards_after_contact",
+                                                                                        "rushing_yards_after_contact_avg",
+                                                                                        "rushing_broken_tackles"]]).reset_index(drop=True).iloc[0])
+
+weekly["opponent_team"] = "null"
+weekly["snap_count"] = -1
+
+'''weekly["avg_time_to_throw"] = -1
+weekly["avg_completed_air_yards"] = -1
+weekly["avg_intended_air_yards"] = -1
+weekly["avg_air_yards_differential"] = -1
+weekly["aggressiveness"] = -1
+weekly["max_completed_air_distance"] = -1
+weekly["avg_air_yards_to_sticks"] = -1
+weekly["passer_rating"] = -1
+weekly["completion_percentage"] = -1
+weekly["expected_completion_percentage"] = -1
+weekly["completion_percentage_above_expectation"] = -1
+weekly["avg_air_distance"] = -1
+weekly["max_air_distance"] = -1
+
+weekly["efficiency"] = -1
+weekly["percent_attempts_gte_eight_defenders"] = -1
+weekly["avg_time_to_los"] = -1
+weekly["rush_attempts"] = -1
+weekly["rush_yards"] = -1
+weekly["expected_rush_yards"] = -1
+weekly["rush_yards_over_expected"] = -1
+weekly["avg_rush_yards"] = -1
+weekly["rush_yards_over_expected_per_att"] = -1
+weekly["rush_pct_over_expected"] = -1
+
+weekly["avg_cushion"] = -1
+weekly["avg_separation"] = -1
+weekly["avg_intended_air_yards"] = -1
+weekly["percent_share_of_intended_air_yards"] = -1
+weekly["catch_percentage"] = -1
+weekly["avg_yac"] = -1
+weekly["avg_expected_yac"] = -1
+weekly["avg_yac_above_expectation"] = -1
+
+weekly["passing_drops"] = -1
+weekly["passing_drop_pct"] = -1
+weekly["passing_bad_throws"] = -1
+weekly["passing_bad_throw_pct"] = -1
+weekly["times_blitzed"] = -1
+weekly["times_hurried"] = -1
+weekly["times_hit"] = -1
+weekly["times_pressured"] = -1
+weekly["times_pressured_pct"] = -1
+
+weekly["rushing_yards_before_contact"] = -1
+weekly["rushing_yards_before_contact_avg"] = -1
+weekly["rushing_yards_after_contact"] = -1
+weekly["rushing_yards_after_contact_avg"] = -1
+weekly["rushing_broken_tackles"] = -1
+
+weekly["receiving_broken_tackles"] = -1
+weekly["receiving_drop"] = -1
+weekly["receiving_drop_pct"] = -1
+weekly["receiving_int"] = -1
+weekly["receiving_rat"] = -1'''
+
+# Access all rows in weekly dataframe using a for loop
+for index, row in weekly.iterrows():
+    row["opponent_team"] = populate_with_opposing_team(row, pbp)
+    row["snap_count"] = populate_with_snap_counts(row, snaps)
+    # TODO: CURRENTLY BROKEN. Struggling to debug, might need to reformat into a simpler format similar to opponent_team and snap_count functions
+
+    '''ngs = populate_with_ngs(row, pass_ngs, rush_ngs, rec_ngs)
+    if ngs is not None and not ngs.empty:
+        for x in ngs.keys():
+            row[x] = ngs[x]
+    
+    pfr = populate_with_pfr(row, pass_pfr, rush_pfr, rec_pfr)
+    if pfr is not None and not pfr.empty:
+        #print(pfr)
+        for x in pfr.keys():
+            row[x] = pfr[x]
+            #print(row[x])'''
+
+    weekly.loc[index] = row
+
+    print(f"{index}/{len(weekly)}")
+
 # Call function (using TQDM to show progress)
 # TODO: FIND WAY TO SPEED UP, its really slow currently, there must be a better way to do it
-print("Opposing Team Lookup . . .") #Print status update
-tqdm.pandas()
-weekly['opponent_team'] = weekly.progress_apply(date_and_team_to_other_team_vectorized, args=(pbp,), axis=1)
-print("Opposing Team Lookup Complete! Sample output:\n") #Print status update
-#print(weekly.head()) #Print sample of result
+#tqdm.pandas()
+#print("Gathering opponent team data . . .") #Print status update
+#weekly['opponent_team'] = weekly.progress_apply(populate_with_opposing_team, args=(pbp,), axis=1)
+#print("Gathering snap count data . . .") #Print status update
+#weekly['snap_count'] = weekly.progress_apply(populate_with_snap_counts, args=(snaps,), axis=1)
+
+print("Outside Data Compilation Complete! Sample output:\n") #Print status update
+print(weekly.head()) #Print sample of result
 
 # Create QB DF
 print("QB Data Importing . . .\n") #Print status update
 qb = weekly[weekly["position"].isin(["QB"])].reset_index(drop=True) #Create new dataframe for relevant QB information
 qb["label"] = qb.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
-qb = qb.loc[:, ["label",
+qb = qb.loc[:, ["player_display_name",
+                "label",
                 "completions",
                 "attempts",
                 "passing_yards",
@@ -77,7 +362,8 @@ qb = qb.loc[:, ["label",
                 "rushing_first_downs",
                 "rushing_epa",
                 "rushing_2pt_conversions",
-                "fantasy_points"]]
+                "fantasy_points",
+                "snap_count"]]
 print("\nQB Data Imported!\n") #Print status update
 qb.to_csv("data\qb.csv", index=False) #Save QB data to CSV
 
@@ -85,7 +371,8 @@ qb.to_csv("data\qb.csv", index=False) #Save QB data to CSV
 print("RB Data Importing . . .\n") #Print status update
 rb = weekly[weekly["position"].isin(["RB"])].reset_index(drop=True) #Create new dataframe for relevant RB information
 rb["label"] = rb.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
-rb = rb.loc[:, ["label",
+rb = rb.loc[:, ["player_display_name",
+                "label",
                 "carries",
                 "rushing_yards",
                 "rushing_tds",
@@ -108,7 +395,8 @@ rb = rb.loc[:, ["label",
                 "air_yards_share",
                 "wopr",
                 "special_teams_tds",
-                "fantasy_points_ppr"]]
+                "fantasy_points_ppr",
+                "snap_count"]]
 print("\nRB Data Imported!\n") #Print status update
 rb.to_csv("data\\rb.csv", index=False) #Save RB data to CSV
 
@@ -116,7 +404,8 @@ rb.to_csv("data\\rb.csv", index=False) #Save RB data to CSV
 print("WR Data Importing . . .\n") #Print status update
 wr = weekly[weekly["position"].isin(["WR"])].reset_index(drop=True) #Create new dataframe for relevant WR information
 wr["label"] = wr.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
-wr = wr.loc[:, ["label",
+wr = wr.loc[:, ["player_display_name",
+                "label",
                 "receptions",
                 "targets",
                 "receiving_yards",
@@ -133,7 +422,8 @@ wr = wr.loc[:, ["label",
                 "wopr",
                 "special_teams_tds", 
                 "fantasy_points",
-                "fantasy_points_ppr"]]
+                "fantasy_points_ppr",
+                "snap_count"]]
 print("\nWR Data Imported!\n") #Print status update
 wr.to_csv("data\wr.csv", index=False) #Save WR data to CSV
 
@@ -141,7 +431,8 @@ wr.to_csv("data\wr.csv", index=False) #Save WR data to CSV
 print("TE Data Importing . . .\n") #Print status update
 te = weekly[weekly["position"].isin(["TE"])].reset_index(drop=True) #Create new dataframe for relevant TE information
 te["label"] = te.progress_apply(lambda row: row["player_id"] + ":" + str(row["season"]) + ":" + str(row["week"]).zfill(2) + ":" + row["recent_team"] + ":" + row["opponent_team"], axis=1)
-te = te.loc[:, ["label",
+te = te.loc[:, ["player_display_name",
+                "label",
                 "receptions",
                 "targets",
                 "receiving_yards",
@@ -158,7 +449,8 @@ te = te.loc[:, ["label",
                 "wopr",
                 "special_teams_tds", 
                 "fantasy_points",
-                "fantasy_points_ppr"]]
+                "fantasy_points_ppr",
+                "snap_count"]]
 print("\nTE Data Imported!\n") #Print status update
 te.to_csv("data\\te.csv", index=False) #Save TE data to CSV'''
 
