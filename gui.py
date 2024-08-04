@@ -1,12 +1,20 @@
 import pandas as pd
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 
-# Load the data
-qb_results = pd.read_csv('final_data/qb_final_predictions.csv')
-rb_results = pd.read_csv('final_data/rb_final_predictions.csv')
-wr_results = pd.read_csv('final_data/wr_final_predictions.csv')
-te_results = pd.read_csv('final_data/te_final_predictions.csv')
+# Load the data with error handling
+def load_data(filepath):
+    try:
+        return pd.read_csv(filepath)
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to load data from {filepath}: {e}")
+        return pd.DataFrame()
+
+qb_results = load_data('final_data/qb_final_predictions.csv')
+rb_results = load_data('final_data/rb_final_predictions.csv')
+wr_results = load_data('final_data/wr_final_predictions.csv')
+te_results = load_data('final_data/te_final_predictions.csv')
 
 class FantasyFootballApp:
     def __init__(self, root):
@@ -83,6 +91,8 @@ class FantasyFootballApp:
             # Add a Treeview for each position
             tree = ttk.Treeview(position_frame, columns=('display_name', 'fantasy_points'), show='headings', height=5)
             tree.pack(expand=True, fill='both')
+            tree.heading('display_name', text='Player')
+            tree.heading('fantasy_points', text='Fantasy Points')
             self.position_frames[position] = tree
 
     def refresh_all_frames(self):
@@ -109,7 +119,7 @@ class FantasyFootballApp:
         tree.heading('display_name', text='Player')
         tree.heading('fantasy_points', text='Fantasy Points')
 
-        # Insert data with strikethrough where applicable
+        # Insert data with strikethrough and green color where applicable
         for _, row in results.iterrows():
             player_name = row['display_name']
             fantasy_points = row['fantasy_points']
@@ -117,11 +127,14 @@ class FantasyFootballApp:
 
             if player_name in self.struck_players:
                 tags.append('struck')
+            if player_name in self.get_all_drafted_players():
+                tags.append('drafted')
 
             tree.insert('', 'end', text=player_name, values=(player_name, fantasy_points), tags=tags)
 
-        # Add tag configuration for strikethrough
+        # Add tag configuration for strikethrough and green color
         tree.tag_configure('struck', font=('Helvetica', 10, 'overstrike'))
+        tree.tag_configure('drafted', background='lightgreen')
 
         # Bind the click event to toggle strikethrough and context menu
         tree.bind('<Double-1>', self.toggle_strikethrough)
@@ -171,7 +184,7 @@ class FantasyFootballApp:
         else:
             return  # Limit reached; do not add player
 
-        self.refresh_drafted_section()  # Refresh only the drafted section
+        self.refresh_all_frames()  # Refresh all frames to update drafted players
 
     def remove_from_drafted(self, player_data):
         position = player_data['position']
@@ -190,7 +203,7 @@ class FantasyFootballApp:
             self.drafted_counts['FLEX'] -= 1
         self.drafted_counts['BENCH'] -= 1
 
-        self.refresh_drafted_section()  # Refresh only the drafted section
+        self.refresh_all_frames()  # Refresh all frames to update drafted players
 
     def show_context_menu(self, event, tree, results):
         item = tree.identify_row(event.y)
