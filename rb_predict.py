@@ -145,6 +145,7 @@ predictions["display_name"] = name
 predictions = predictions.groupby("display_name").mean()
 predictions = predictions.sort_values(by="fantasy_points", ascending=False)
 predictions = predictions.drop(columns=[0])
+predictions["position"] = "RB"
 pd.set_option('display.max_rows', None)
 print(predictions)
 predictions.to_csv("final_data/rb_final_predictions.csv", index=True)
